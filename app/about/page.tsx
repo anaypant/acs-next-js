@@ -47,7 +47,7 @@ export default function AboutUs() {
         </section>
       </main>
 
-      <Footer/>
+      
     </div>
   );
 }
