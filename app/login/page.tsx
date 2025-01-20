@@ -1,11 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '../utils/supabase/supabase';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false); // Loading state
+  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -14,17 +17,21 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setMessage('');
 
     const { error } = await supabase.auth.signInWithPassword({
       email: formData.email,
       password: formData.password,
     });
 
+    setIsLoading(false);
+
     if (error) {
       setMessage(`Error: ${error.message}`);
     } else {
       setMessage('Login successful!');
-      // Optionally redirect to dashboard
+      router.push('/'); // Redirect to dashboard
     }
   };
 
@@ -58,9 +65,12 @@ export default function LoginPage() {
         </div>
         <button
           type="submit"
-          className="w-full py-3 bg-gray-700 text-gray-100 font-bold rounded-md hover:bg-gray-600 focus:outline-none"
+          disabled={isLoading}
+          className={`w-full py-3 ${
+            isLoading ? 'bg-gray-600' : 'bg-gray-700 hover:bg-gray-600'
+          } text-gray-100 font-bold rounded-md focus:outline-none`}
         >
-          Login
+          {isLoading ? 'Logging in...' : 'Login'}
         </button>
       </form>
       {message && <p className="mt-4 text-center text-sm text-gray-400">{message}</p>}
