@@ -58,7 +58,7 @@ export default function LandingPage(session) {
           </div>
         </section>
 
-        <Footer/>
+       
       </div>
     </SessionProvider>
   );
