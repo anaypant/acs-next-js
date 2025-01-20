@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { supabase } from '../utils/supabase/supabase';
+import { FaUserCircle } from 'react-icons/fa'; // Importing the user icon
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
@@ -24,9 +25,9 @@ export default function Navbar() {
     });
 
     return () => {
-        if (subscription) {
-            subscription.unsubscribe();
-        }
+      if (subscription) {
+        subscription.unsubscribe();
+      }
     };
   }, []);
 
@@ -75,9 +76,9 @@ export default function Navbar() {
               {/* User Icon */}
               <button
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="px-4 py-2 bg-gray-700 text-gray-100 rounded-full shadow-md hover:bg-gray-600 focus:outline-none"
+                className="flex items-center px-4 py-2 bg-gray-700 text-gray-100 rounded-full shadow-md hover:bg-gray-600 focus:outline-none"
               >
-                <span className="material-icons">account_circle</span>
+                <FaUserCircle size={24} /> {/* Icon from React Icons */}
               </button>
 
               {/* Dropdown Menu */}

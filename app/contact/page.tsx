@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
-import { chownSync } from 'fs';
 import Footer from '../components/Footer';
 
 

@@ -2,14 +2,12 @@
 
 import React from 'react';
 import Navbar from './components/Navbar';
-import { SessionProvider } from "next-auth/react"
 import Footer from './components/Footer';
 
 
 
-export default function LandingPage(session) {
+export default function LandingPage() {
   return (
-    <SessionProvider session={session}>
       <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center justify-center">
         <Navbar/>
 
@@ -62,6 +60,5 @@ export default function LandingPage(session) {
       <Footer />
        
       </div>
-    </SessionProvider>
   );
 }
