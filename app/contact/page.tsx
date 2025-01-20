@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import { chownSync } from 'fs';
-import Footer from '../components/Footer';
+
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
@@ -94,7 +94,7 @@ export default function ContactPage() {
         </section>
       </main>
 
-      <Footer></Footer>
+     
     </div>
   );
 }
