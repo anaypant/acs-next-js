@@ -1,5 +1,5 @@
 'use client';
-
+console.log("Lets go bitches")
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { DynamoDBClient, QueryCommand, PutItemCommand } from '@aws-sdk/client-dynamodb';
