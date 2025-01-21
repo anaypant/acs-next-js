@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '../utils/supabase/supabase';
 import { DynamoDBClient, QueryCommand } from '@aws-sdk/client-dynamodb';
 import dynamoDBClient from "@/app/utils/aws/dynamodb";
-import { useRouter } from 'next/navigation';
 
 interface Email {
     clientId: string;
@@ -24,6 +25,19 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            const { data } = await supabase.auth.getSession();
+
+            if (!data.session) {
+                router.push('/login'); // Redirect to login if not authenticated
+                return;
+            }
+        };
+
+        checkAuth();
+    }, [router]);
 
     useEffect(() => {
         const fetchEmails = async () => {
