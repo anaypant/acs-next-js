@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../utils/supabase/supabase';
+import { useRouter } from 'next/navigation';
+import { createServerClient } from '../utils/supabase/server';
 
 export default function SettingsPage() {
     const [email, setEmail] = useState('');
@@ -10,6 +11,10 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const router = useRouter();
+
+    const supabase = createServerClient();
 
     useEffect(() => {
         const fetchUserDetails = async () => {
@@ -29,7 +34,7 @@ export default function SettingsPage() {
         };
 
         fetchUserDetails();
-    }, []);
+    }, [supabase]);
 
     const handleSaveChanges = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -37,7 +42,6 @@ export default function SettingsPage() {
         setError(null);
         setSuccess(null);
 
-        // Check if passwords match
         if (password !== confirmPassword) {
             setError("Passwords do not match. Please try again.");
             setLoading(false);
@@ -45,13 +49,11 @@ export default function SettingsPage() {
         }
 
         try {
-            // Update email
             if (email) {
                 const { error: emailError } = await supabase.auth.updateUser({ email });
                 if (emailError) throw emailError;
             }
 
-            // Update password
             if (password) {
                 const { error: passwordError } = await supabase.auth.updateUser({ password });
                 if (passwordError) throw passwordError;
@@ -63,6 +65,63 @@ export default function SettingsPage() {
             setError("Failed to update settings. Please try again.");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        if (!confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+            return;
+        }
+
+        setIsDeleting(true);
+        setError(null);
+
+        try {
+            const {
+                data: { session },
+                error: sessionError,
+            } = await supabase.auth.getSession();
+
+            if (sessionError || !session?.user) {
+                throw new Error("Failed to fetch user session.");
+            }
+
+            const { id: userId, email } = session.user;
+
+            // Create a Supabase Admin Client
+            const adminSupabase = createServerClient();
+
+            // Delete user from Supabase (admin API)
+            const { error: adminDeleteError } = await adminSupabase.auth.admin.deleteUser(userId);
+
+            if (adminDeleteError) {
+                throw new Error(`Failed to delete user from Supabase: ${adminDeleteError.message}`);
+            }
+
+            // Call API to delete user from DynamoDB
+            const response = await fetch('/api/users/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    jwt: session.access_token,
+                    email,
+                    uid: userId,
+                }),
+            });
+
+            if (!response.ok) {
+                // throw new Error("Failed to delete account from DynamoDB.");
+                console.error("Failed to delete account from DynamoDB.");
+            }
+
+            setSuccess("Your account has been deleted successfully.");
+            supabase.auth.signOut(); // Ensure session is cleared
+            router.push('/'); // Redirect to the homepage
+        } catch (err) {
+            console.error("Error deleting account:", err.message);
+            setError("Failed to delete account. Please try again.");
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -125,6 +184,29 @@ export default function SettingsPage() {
                         {error && <p className="text-red-500 mt-4">{error}</p>}
                         {success && <p className="text-green-500 mt-4">{success}</p>}
                     </div>
+                </section>
+
+                {/* Delete Account Section */}
+                <section>
+                    <h2 className="text-2xl font-semibold mb-4">Danger Zone</h2>
+                    <div className="bg-gray-800 p-6 rounded-md shadow-md">
+                        <p className="text-red-400 mb-4">
+                            Deleting your account will remove all your data. This action cannot be undone.
+                        </p>
+                        <button
+                            onClick={handleDeleteAccount}
+                            className={`px-6 py-3 font-semibold rounded-md shadow-md ${
+                                isDeleting
+                                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                    : 'bg-red-500 text-white hover:bg-red-600'
+                            }`}
+                            disabled={isDeleting}
+                        >
+                            {isDeleting ? 'Deleting...' : 'Delete Account'}
+                        </button>
+                    </div>
+                    {error && <p className="text-red-500 mt-4">{error}</p>}
+                    {success && <p className="text-green-500 mt-4">{success}</p>}
                 </section>
             </main>
 

@@ -62,51 +62,90 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    setMessage('');
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`, // Ensure users are redirected post-login
+      },
+    });
+
+    setIsLoading(false);
+
+    if (error) {
+      setMessage(`Error: ${error.message}`);
+    } else {
+      setMessage('Redirecting to Google for login...');
+    }
+  };
+
   return (
-      <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center justify-center px-6">
-        <h1 className="text-4xl font-extrabold mb-6">Login to ACS</h1>
-        <form onSubmit={handleSubmit} className="w-full max-w-md space-y-6 bg-gray-800 p-6 rounded-md shadow-md">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-300">Email</label>
-            <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="w-full p-3 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300">Password</label>
-            <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                className="w-full p-3 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <button
-              type="submit"
-              disabled={isLoading}
-              className={`w-full py-3 ${
-                  isLoading ? 'bg-blue-600' : 'bg-blue-500 hover:bg-blue-400'
-              } text-gray-100 font-bold rounded-md focus:outline-none`}
-          >
-            {isLoading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
-        <p
-            onClick={handleForgotPassword}
-            className="mt-4 text-sm text-blue-400 hover:underline cursor-pointer"
+    <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center justify-center px-6">
+      <h1 className="text-4xl font-extrabold mb-6">Login to ACS</h1>
+      <form onSubmit={handleSubmit} className="w-full max-w-md space-y-6 bg-gray-800 p-6 rounded-md shadow-md">
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-300">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            className="w-full p-3 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-300">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            className="w-full p-3 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className={`w-full py-3 ${
+            isLoading ? 'bg-blue-600' : 'bg-blue-500 hover:bg-blue-400'
+          } text-gray-100 font-bold rounded-md focus:outline-none`}
         >
-          {isResettingPassword ? 'Sending reset email...' : 'Forgot Password?'}
-        </p>
-        {message && <p className="mt-4 text-center text-sm text-gray-400">{message}</p>}
+          {isLoading ? 'Logging in...' : 'Login'}
+        </button>
+      </form>
+
+      <p
+        onClick={handleForgotPassword}
+        className="mt-4 text-sm text-blue-400 hover:underline cursor-pointer"
+      >
+        {isResettingPassword ? 'Sending reset email...' : 'Forgot Password?'}
+      </p>
+
+      <div className="mt-6 px-4">
+        <button
+          onClick={handleGoogleSignIn}
+          disabled={isLoading}
+          className={`w-full flex items-center justify-center py-2 px-4 ${
+            isLoading ? 'bg-gray-600' : 'bg-black hover:bg-gray-800'
+          } text-white font-medium rounded-md shadow-md focus:outline-none`}
+        >
+          <img
+            src="/google-icon.svg"
+            alt="Google"
+            className="w-5 h-5 mr-3"
+          />
+          {isLoading ? 'Redirecting...' : 'Sign in with Google'}
+        </button>
       </div>
+
+      {message && <p className="mt-4 text-center text-sm text-gray-400">{message}</p>}
+    </div>
   );
 }

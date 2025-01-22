@@ -35,11 +35,10 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setMessage('');
 
-    // Sign up with email and password
-    const { error } = await supabase.auth.signUp({
+    // Supabase sign-up
+    const { data, error } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
       options: {
@@ -52,12 +51,34 @@ export default function SignupPage() {
       },
     });
 
-    setIsLoading(false);
-
     if (error) {
       setMessage(`Error: ${error.message}`);
     } else {
-      setMessage('Signup successful! Please check your email to confirm.');
+      const { session } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) {
+        setMessage('Error: Failed to retrieve session token.');
+        return;
+      }
+
+      // Send user data to the middle-man API
+      const response = await fetch('/api/send-supabase-package', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jwt: token,
+          email: formData.email,
+          uid: data?.user?.id,
+        }),
+      });
+
+      if (response.ok) {
+        setMessage('Signup successful! Redirecting...');
+        router.push('/dashboard');
+      } else {
+        setMessage('Error uploading user data to the database.');
+      }
     }
   };
 
