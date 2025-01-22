@@ -103,6 +103,14 @@ export default function DashboardPage() {
         router.push(`/conversation/${threadId}`);
     };
 
+    const handleGoHome = () => {
+        router.push('./');
+    };
+
+    const handleGoSettings = () => {
+        router.push('./settings');
+    };
+
     return (
         <div className="flex h-screen bg-gray-900 text-gray-100">
             {/* Sidebar */}
@@ -114,28 +122,25 @@ export default function DashboardPage() {
                     <a href="#" className="block py-2 px-4 rounded-md hover:bg-gray-700">Contacts</a>
                     <a href="#" className="block py-2 px-4 rounded-md hover:bg-gray-700">Conversations</a>
                     <a href="#" className="block py-2 px-4 rounded-md hover:bg-gray-700">Billing</a>
-                    <a href="#" className="block py-2 px-4 rounded-md hover:bg-gray-700">Settings</a>
+                    <button
+                        onClick={handleGoSettings}
+                        className="block w-full text-left py-2 px-4 rounded-md hover:bg-gray-700"
+                    >
+                        Settings
+                    </button>
                 </nav>
             </aside>
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col">
-                <header className="p-6 bg-gray-800">
-                    <h1 className="text-2xl font-bold mb-4">Email Dashboard</h1>
-                    <div className="flex justify-between items-center bg-gray-700 p-4 rounded-md">
-                        <div className="text-center">
-                            <h2 className="text-xl font-semibold">Total Threads</h2>
-                            <p className="text-lg">{threads.length}</p>
-                        </div>
-                        <div className="text-center">
-                            <h2 className="text-xl font-semibold">Total Senders</h2>
-                            <p className="text-lg">{new Set(threads.map(email => email.from)).size}</p>
-                        </div>
-                        <div className="text-center">
-                            <h2 className="text-xl font-semibold">Unread Threads</h2>
-                            <p className="text-lg">{threads.filter(email => email.read === "").length}</p>
-                        </div>
-                    </div>
+                <header className="p-6 bg-gray-800 flex items-center justify-between">
+                    <h1 className="text-2xl font-bold">Email Dashboard</h1>
+                    <button
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500"
+                        onClick={handleGoHome}
+                    >
+                        Home
+                    </button>
                 </header>
 
                 <main className="flex-1 p-6 overflow-y-auto">
