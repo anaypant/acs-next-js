@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 
 // Helper function to validate request body
 const validateRequestBody = (body: any) => {
@@ -23,20 +24,49 @@ export async function POST(req: NextRequest) {
 
     const { jwt, email, uid } = body;
 
-    // Perform any additional business logic, e.g., verifying the JWT, saving to database, etc.
-    // Placeholder for database logic
-    console.log('Received Data:', { jwt, email, uid });
+    console.log("jwt", jwt);
+    console.log("email", email);
+    console.log("uid", uid);
 
-    // Set a cookie in the response
-    const response = NextResponse.json({ status: 'User created successfully!' }, { status: 201 });
-    response.cookies.set('session_token', jwt, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24, // 1 day
-      path: '/',
+    // Initialize AWS Lambda client
+    const lambdaClient = new LambdaClient({
+      region: process.env.NEXT_PUBLIC_AWS_REGION, // Replace with your region
+      credentials: {
+        accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY || '',
+        secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET || '',
+      },
     });
 
-    return response;
+    // Define the payload for Lambda
+    const payload = {
+      jwt,
+      email,
+      uid,
+    };
+
+    // Create and send the Lambda invoke command
+    const command = new InvokeCommand({
+      FunctionName: 'ProcessNewUserSupabase', // Replace with your Lambda function name or ARN
+      Payload: Buffer.from(JSON.stringify(payload)),
+    });
+
+    // Invoke the Lambda function
+    const response = await lambdaClient.send(command);
+
+    // Decode the Lambda response
+    const lambdaResponse = JSON.parse(Buffer.from(response.Payload || '').toString());
+
+    // Handle the Lambda response
+    if (response.FunctionError) {
+      console.error('Lambda Error:', response.FunctionError, lambdaResponse);
+      return NextResponse.json(
+        { status: 'error', message: 'Lambda function execution failed.' },
+        { status: 500 }
+      );
+    }
+
+    console.log('Lambda Response:', lambdaResponse);
+    return NextResponse.json({ status: 'success', data: lambdaResponse }, { status: 200 });
   } catch (error) {
     console.error('Error handling request:', error);
     return NextResponse.json(

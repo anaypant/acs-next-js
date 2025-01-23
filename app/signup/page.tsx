@@ -21,7 +21,7 @@ export default function SignupPage() {
     const checkUser = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        router.push('/'); // Redirect if already logged in
+        router.push('/dashboard'); // Redirect if already logged in
       }
     };
 
@@ -36,6 +36,7 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage('');
+    setIsLoading(true);
 
     // Supabase sign-up
     const { data, error } = await supabase.auth.signUp({
@@ -53,32 +54,11 @@ export default function SignupPage() {
 
     if (error) {
       setMessage(`Error: ${error.message}`);
+      setIsLoading(false);
     } else {
-      const { session } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
-      if (!token) {
-        setMessage('Error: Failed to retrieve session token.');
-        return;
-      }
-
-      // Send user data to the middle-man API
-      const response = await fetch('/api/send-supabase-package', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jwt: token,
-          email: formData.email,
-          uid: data?.user?.id,
-        }),
-      });
-
-      if (response.ok) {
-        setMessage('Signup successful! Redirecting...');
-        router.push('/dashboard');
-      } else {
-        setMessage('Error uploading user data to the database.');
-      }
+      setMessage('Signup successful! Redirecting...');
+      setIsLoading(false);
+      router.push('/dashboard');
     }
   };
 
@@ -86,29 +66,38 @@ export default function SignupPage() {
     setIsLoading(true);
     setMessage('');
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-    });
+    try {
+      // Start Google OAuth flow
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/loading`, // Redirect to the loading page after OAuth
+        },
+      });
 
-    setIsLoading(false);
+      if (error) {
+        setMessage(`Error: ${error.message}`);
+        setIsLoading(false);
+        return;
+      }
 
-    if (error) {
-      setMessage(`Error: ${error.message}`);
-    } else {
       setMessage('Redirecting to Google...');
+    } catch (err) {
+      console.error('Error during Google sign-in:', err);
+      setMessage('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center justify-center px-6">
       <h1 className="text-4xl font-extrabold mb-6">Signup for ACS</h1>
       <form onSubmit={handleSubmit} className="w-full max-w-md space-y-6 bg-gray-800 p-6 rounded-md shadow-md">
-        {/* Explanation for required fields */}
         <p className="text-sm text-gray-400 mb-2">
           <span className="text-red-500">*</span> Indicates required field
         </p>
-
-        {/* First Name */}
         <div>
           <label htmlFor="firstName" className="block text-sm font-medium text-gray-300">
             First Name <span className="text-red-500">*</span>
@@ -123,8 +112,6 @@ export default function SignupPage() {
             className="w-full p-3 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
           />
         </div>
-
-        {/* Last Name */}
         <div>
           <label htmlFor="lastName" className="block text-sm font-medium text-gray-300">
             Last Name <span className="text-red-500">*</span>
@@ -139,38 +126,6 @@ export default function SignupPage() {
             className="w-full p-3 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
           />
         </div>
-
-        {/* Company */}
-        <div>
-          <label htmlFor="company" className="block text-sm font-medium text-gray-300">
-            Company
-          </label>
-          <input
-            type="text"
-            id="company"
-            name="company"
-            value={formData.company}
-            onChange={handleChange}
-            className="w-full p-3 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Phone Number */}
-        <div>
-          <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-300">
-            Phone Number
-          </label>
-          <input
-            type="tel"
-            id="phoneNumber"
-            name="phoneNumber"
-            value={formData.phoneNumber}
-            onChange={handleChange}
-            className="w-full p-3 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Email */}
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-300">
             Email <span className="text-red-500">*</span>
@@ -185,8 +140,6 @@ export default function SignupPage() {
             className="w-full p-3 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
           />
         </div>
-
-        {/* Password */}
         <div>
           <label htmlFor="password" className="block text-sm font-medium text-gray-300">
             Password <span className="text-red-500">*</span>
@@ -201,37 +154,24 @@ export default function SignupPage() {
             className="w-full p-3 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
           />
         </div>
-
-        {/* Submit Button */}
         <button
           type="submit"
           disabled={isLoading}
-          className={`w-full py-3 ${
-            isLoading ? 'bg-gray-600' : 'bg-blue-500 hover:bg-blue-600'
-          } text-gray-100 font-bold rounded-md focus:outline-none`}
+          className={`w-full py-3 ${isLoading ? 'bg-gray-600' : 'bg-blue-500 hover:bg-blue-600'} text-gray-100 font-bold rounded-md focus:outline-none`}
         >
           {isLoading ? 'Signing up...' : 'Signup'}
         </button>
       </form>
-
-      {/* Google Sign-In Button */}
       <div className="mt-6 px-4">
         <button
           onClick={handleGoogleSignIn}
           disabled={isLoading}
-          className={`w-full flex items-center justify-center py-2 px-4 ${
-            isLoading ? 'bg-gray-600' : 'bg-black hover:bg-gray-800'
-          } text-white font-medium rounded-md shadow-md focus:outline-none`}
+          className={`w-full flex items-center justify-center py-2 px-4 ${isLoading ? 'bg-gray-600' : 'bg-black hover:bg-gray-800'} text-white font-medium rounded-md shadow-md focus:outline-none`}
         >
-          <img
-            src="/google-icon.svg"
-            alt="Google"
-            className="w-5 h-5 mr-3"
-          />
+          <img src="/google-icon.svg" alt="Google" className="w-5 h-5 mr-3" />
           {isLoading ? 'Redirecting...' : 'Sign in with Google'}
         </button>
       </div>
-
       {message && <p className="mt-4 text-center text-sm text-gray-400">{message}</p>}
     </div>
   );

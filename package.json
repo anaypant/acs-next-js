@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.731.1",
+    "@aws-sdk/client-lambda": "^3.731.1",
     "@supabase/ssr": "github:supabase/ssr",
     "@supabase/supabase-js": "^2.47.14",
     "next": "15.1.4",
