@@ -20,10 +20,11 @@ export default function SettingsPage() {
     const fetchUserDetails = async () => {
       try {
         const { data, error } = await supabase.auth.getUser();
+        console.log(data)
 
         if (error) {
-          console.error('Error fetching user details:', error.message);
-          setError('Failed to load user details.');
+        //   console.error('Error fetching user details:', error.message);
+        //   setError('Failed to load user details.');
           return;
         }
 
@@ -75,34 +76,44 @@ export default function SettingsPage() {
     if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
       return;
     }
-
+  
     setIsDeleting(true);
     setError(null);
-
+  
     try {
+      // Fetch the current session before signing out
       const { data, error } = await supabase.auth.getSession();
-
+  
       if (error || !data.session?.user) {
         throw new Error('Failed to fetch user session.');
       }
-
+  
+      // Store session details
+      const sessionDetails = {
+        jwt: data.session.access_token,
+        email: data.session.user.email,
+        uid: data.session.user.id,
+      };
+  
+      // Sign out from Supabase to clear session
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) {
+        throw new Error('Failed to sign out of Supabase.');
+      }
+  
+      // Send a request to AWS to delete the user account
       const response = await fetch('/api/users/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jwt: data.session.access_token,
-          email: data.session.user.email,
-          uid: data.session.user.id,
-        }),
+        body: JSON.stringify(sessionDetails),
       });
-
+  
       if (!response.ok) {
         const result = await response.json();
-        throw new Error(result.error || 'Failed to delete account.');
+        throw new Error(result.error || 'Failed to delete account on AWS.');
       }
-
+  
       setSuccess('Your account has been deleted successfully.');
-      await supabase.auth.signOut(); // Ensure session is cleared
       router.push('/'); // Redirect to the homepage
     } catch (err: any) {
       console.error('Error deleting account:', err.message);
@@ -111,7 +122,7 @@ export default function SettingsPage() {
       setIsDeleting(false);
     }
   };
-
+  
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {

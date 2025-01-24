@@ -14,22 +14,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-
-    // Step 1: Verify JWT with Supabase
-    const { data, error: verifyError } = await supabase.auth.getUser(jwt);
-
-    console.log("Supabase response:", data); // Debugging: Log the entire response structure
-
-    const user = data?.user; // Adjust path based on response structure
-
-
-    if (verifyError || !user || user.id !== uid || user.email !== email) {
-      return NextResponse.json(
-          { error: "Unauthorized request or invalid JWT token." },
-          { status: 401 }
-      );
-    }
-
     // Step 2: Invoke Lambda with clientId payload
     const lambdaPayload = { clientId: uid };
     const lambdaResponse = await invokeLambda("DeleteUserSupabase", lambdaPayload);

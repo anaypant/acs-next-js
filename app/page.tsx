@@ -7,6 +7,8 @@ import { Box, Typography, Button, Container, Grid, Card, CardContent, TextField 
 
 export default function LandingPage() {
     const [searchPlaceholder, setSearchPlaceholder] = useState('');
+    const [isVisible, setIsVisible] = useState(true);
+
     const searchSuggestions = [
         'AI tools for real estate',
         'Streamline your workflow',
@@ -14,18 +16,25 @@ export default function LandingPage() {
         'Effortless communication',
         'Seamless CRM integrations',
     ];
+
     let suggestionIndex = 0;
 
     useEffect(() => {
         const cyclePlaceholders = () => {
-            setSearchPlaceholder(searchSuggestions[suggestionIndex]);
-            suggestionIndex = (suggestionIndex + 1) % searchSuggestions.length;
+            setIsVisible(false); // Start fade-out
+            setTimeout(() => {
+                setSearchPlaceholder(searchSuggestions[suggestionIndex]);
+                suggestionIndex = (suggestionIndex + 1) % searchSuggestions.length;
+                setIsVisible(true); // Start fade-in
+            }, 500); // Wait for fade-out before changing text
         };
-        const interval = setInterval(cyclePlaceholders, 2000); // Change every 2 seconds
+
+        const interval = setInterval(cyclePlaceholders, 2500); // Cycle every 2.5 seconds
         return () => clearInterval(interval);
     }, []);
 
     return (
+        
         <Box sx={{ minHeight: '100vh', bgcolor: 'rgb(18, 20, 35)', color: 'rgb(210, 210, 230)' }}>
             <Navbar />
 
@@ -121,7 +130,6 @@ export default function LandingPage() {
                         Empowering realtors with cutting-edge AI solutions for analytics, communication, and efficiency.
                     </Typography>
                 </motion.div>
-
                 {/* Search Bar */}
                 <motion.div
                     initial={{ opacity: 0 }}
@@ -148,6 +156,16 @@ export default function LandingPage() {
                             placeholder={searchPlaceholder}
                             InputProps={{
                                 disableUnderline: true,
+                                sx: {
+                                    color: 'rgb(210, 210, 230)', // Regular input text color
+                                    '&::placeholder': {
+                                        color: 'rgb(210, 210, 230)', // Placeholder text color
+                                    },
+                                    '& input::placeholder': {
+                                        color: 'rgb(210, 210, 230)', // Explicitly set the placeholder color for inputs
+                                        opacity: 1,
+                                    },
+                                },
                             }}
                             sx={{
                                 flex: 1,
@@ -157,8 +175,8 @@ export default function LandingPage() {
                                 fontWeight: 500,
                                 color: 'rgb(210, 210, 230)',
                                 background: 'transparent',
-                                '&::placeholder': { color: 'rgb(160, 160, 180)', opacity: 1 },
-                                '& input': { textAlign: 'center' },
+                                '&::placeholder': { color: 'rgb(210, 210, 230)', opacity: 1 },
+                                '& input': { textAlign: 'center', color: 'rgb(210, 210, 230)' },
                             }}
                         />
                         <Button
@@ -238,16 +256,34 @@ export default function LandingPage() {
 
 const features = [
     {
-        title: 'AI-Powered Design',
-        description: 'Generate stunning designs with minimal effort.',
+        title: 'AI Solutions for Real Estate',
+        description:
+            'Leverage cutting-edge AI to streamline workflows, analyze market trends, and optimize property management. Perfect for real estate professionals aiming to stay ahead.',
     },
     {
-        title: 'Real-Time Collaboration',
-        description: 'Work with your team in a synchronized environment.',
+        title: 'Predictive Analytics & Insights',
+        description:
+            'Our tools provide predictive analytics tailored to your business, offering insights that help make informed decisions with confidence.',
     },
     {
-        title: 'Seamless Deployment',
-        description: 'Publish your site directly with one click.',
+        title: 'Effortless Communication Tools',
+        description:
+            'Enhance your communication with AI-powered automation for emails, messages, and client follow-ups, making it easier to stay connected with your clients.',
+    },
+    {
+        title: 'Customized AI Solutions',
+        description:
+            'We work closely with you to understand your unique challenges and develop AI-based solutions tailored specifically to your needs.',
+    },
+    {
+        title: 'CRM & Workflow Integration',
+        description:
+            'Seamlessly integrate AI into your existing CRM and workflow tools for a unified and efficient system.',
+    },
+    {
+        title: 'Scalable Solutions for Growth',
+        description:
+            'Our AI tools grow with your business, ensuring that you can scale operations while maintaining efficiency and productivity.',
     },
 ];
 
