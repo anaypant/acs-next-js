@@ -28,7 +28,6 @@ export default function DashboardPage() {
     useEffect(() => {
         const fetchClientId = async () => {
             try {
-                // Fetch clientId from Supabase session
                 const { data, error } = await supabase.auth.getSession();
                 if (error || !data.session) {
                     throw new Error("Failed to retrieve session.");
@@ -53,7 +52,7 @@ export default function DashboardPage() {
                 const tableName = "Conversations";
                 const keyConditionExpression = "associated_account = :clientId";
                 const expressionAttributeValues = {
-                    ":clientId": { S: clientId }, // Use dynamic client ID
+                    ":clientId": { S: clientId },
                 };
 
                 const emails = await fetchEmailsFromDynamoDB(
@@ -83,61 +82,64 @@ export default function DashboardPage() {
     const unreadConversations = threads.filter((thread) => thread.type === "unread").length;
 
     return (
-        <div className="flex h-screen bg-gray-900 text-gray-100">
+        <div className="flex h-screen bg-gradient-to-br from-blue-900 via-gray-900 to-gray-800 text-white font-schad-cn">
             {/* Sidebar */}
-            <aside className="w-1/4 bg-gray-800 flex flex-col p-6">
-                <h2 className="text-2xl font-bold mb-6">Dashboard</h2>
-                <nav className="space-y-4">
-                    <a href="#" className="block py-2 px-4 rounded-md hover:bg-gray-700">Overview</a>
-                    <a href="#" className="block py-2 px-4 rounded-md hover:bg-gray-700">Drafts</a>
-                    <a href="#" className="block py-2 px-4 rounded-md hover:bg-gray-700">Contacts</a>
-                    <a href="#" className="block py-2 px-4 rounded-md hover:bg-gray-700">Conversations</a>
-                    <a href="#" className="block py-2 px-4 rounded-md hover:bg-gray-700">Billing</a>
-                    <a href="./settings" className="block py-2 px-4 rounded-md hover:bg-gray-700">Settings</a>
+            <aside className="w-1/4 bg-gradient-to-br from-gray-800 to-gray-700 shadow-lg p-6">
+                <h2 className="text-3xl font-bold mb-8 tracking-wide">Dashboard</h2>
+                <nav className="space-y-6">
+                    <a href="#" className="block py-2 px-4 rounded-lg bg-gray-700 hover:bg-blue-700 transition-all text-center">Overview</a>
+                    <a href="#" className="block py-2 px-4 rounded-lg bg-gray-700 hover:bg-blue-700 transition-all text-center">Drafts</a>
+                    <a href="#" className="block py-2 px-4 rounded-lg bg-gray-700 hover:bg-blue-700 transition-all text-center">Contacts</a>
+                    <a href="#" className="block py-2 px-4 rounded-lg bg-gray-700 hover:bg-blue-700 transition-all text-center">Conversations</a>
+                    <a href="#" className="block py-2 px-4 rounded-lg bg-gray-700 hover:bg-blue-700 transition-all text-center">Billing</a>
+                    <a href="./settings" className="block py-2 px-4 rounded-lg bg-gray-700 hover:bg-blue-700 transition-all text-center">Settings</a>
                 </nav>
             </aside>
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col">
-                <header className="p-6 bg-gray-800 flex justify-between items-center">
-                    <h1 className="text-2xl font-bold">Email Dashboard</h1>
+                <header className="p-6 bg-gray-800 flex justify-between items-center shadow-md">
+                    <h1 className="text-3xl font-extrabold tracking-wider">Email Dashboard</h1>
                     <button
                         onClick={() => router.push("./")}
-                        className="px-4 py-2 bg-blue-500 text-gray-100 rounded-md hover:bg-blue-600"
+                        className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all"
                     >
                         Home
                     </button>
                 </header>
 
                 {/* Dashboard Widgets */}
-                <div className="p-6 bg-gray-700 flex justify-around items-center">
-                    <div className="text-center">
+                <div className="p-6 grid grid-cols-2 gap-6">
+                    <div className="text-center bg-gray-800 p-6 rounded-lg shadow-lg transform hover:scale-105 transition-all">
                         <h2 className="text-xl font-semibold">Total Conversations</h2>
-                        <p className="text-lg">{totalConversations}</p>
+                        <p className="text-3xl font-bold mt-2">{totalConversations}</p>
                     </div>
-                    <div className="text-center">
+                    <div className="text-center bg-gray-800 p-6 rounded-lg shadow-lg transform hover:scale-105 transition-all">
                         <h2 className="text-xl font-semibold">Unread Conversations</h2>
-                        <p className="text-lg">{unreadConversations}</p>
+                        <p className="text-3xl font-bold mt-2">{unreadConversations}</p>
                     </div>
                 </div>
 
+                {/* Email Threads */}
                 <main className="flex-1 p-6 overflow-y-auto">
                     {loading ? (
-                        <p>Loading...</p>
+                        <p className="text-center text-lg font-semibold">Loading...</p>
                     ) : error ? (
-                        <p className="text-red-500">{error}</p>
+                        <p className="text-center text-red-500 text-lg font-semibold">{error}</p>
                     ) : (
-                        threads.map((thread) => (
-                            <div
-                                key={thread.conversationId}
-                                className="p-4 bg-gray-800 rounded-md cursor-pointer hover:bg-gray-700"
-                                onClick={() => handleThreadClick(thread.conversationId)}
-                            >
-                                <p className="font-bold">{thread.subject}</p>
-                                <p className="text-gray-400">{thread.sender}</p>
-                                <p className="text-gray-500 text-sm">{new Date(thread.timestamp).toLocaleString()}</p>
-                            </div>
-                        ))
+                        <div className="space-y-6">
+                            {threads.map((thread) => (
+                                <div
+                                    key={thread.conversationId}
+                                    className="p-6 bg-gray-800 rounded-lg shadow-lg cursor-pointer hover:bg-gray-700 transition-all"
+                                    onClick={() => handleThreadClick(thread.conversationId)}
+                                >
+                                    <h3 className="text-lg font-bold text-blue-300">{thread.subject}</h3>
+                                    <p className="text-gray-400 mt-1">{thread.sender}</p>
+                                    <p className="text-gray-500 text-sm mt-2">{new Date(thread.timestamp).toLocaleString()}</p>
+                                </div>
+                            ))}
+                        </div>
                     )}
                 </main>
             </div>
