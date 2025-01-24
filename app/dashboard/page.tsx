@@ -79,6 +79,9 @@ export default function DashboardPage() {
         router.push(`/conversation/${conversationId}`);
     };
 
+    const totalConversations = threads.length;
+    const unreadConversations = threads.filter((thread) => thread.type === "unread").length;
+
     return (
         <div className="flex h-screen bg-gray-900 text-gray-100">
             {/* Sidebar */}
@@ -105,6 +108,18 @@ export default function DashboardPage() {
                         Home
                     </button>
                 </header>
+
+                {/* Dashboard Widgets */}
+                <div className="p-6 bg-gray-700 flex justify-around items-center">
+                    <div className="text-center">
+                        <h2 className="text-xl font-semibold">Total Conversations</h2>
+                        <p className="text-lg">{totalConversations}</p>
+                    </div>
+                    <div className="text-center">
+                        <h2 className="text-xl font-semibold">Unread Conversations</h2>
+                        <p className="text-lg">{unreadConversations}</p>
+                    </div>
+                </div>
 
                 <main className="flex-1 p-6 overflow-y-auto">
                     {loading ? (
