@@ -35,7 +35,7 @@ export default function ProfilePage() {
         fetchUser();
     }, []);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
@@ -44,51 +44,40 @@ export default function ProfilePage() {
         setMessage('');
         setIsLoading(true);
 
-        // Update the user in Supabase
-        const { data, error } = await supabase.auth.updateUser({
-            email: formData.email,
-            data: {
-                name: formData.name,
-                phone: formData.phone,
-                company: formData.company,
-            },
-        });
+        try {
+            // Update user profile in Supabase
+            const { error } = await supabase.auth.updateUser({
+                email: formData.email,
+                data: {
+                    name: formData.name,
+                    phone: formData.phone,
+                    company: formData.company,
+                },
+            });
 
-        if (error) {
-            setMessage(`Error updating profile: ${error.message}`);
-            setIsLoading(false);
-            return;
-        }
+            if (error) {
+                throw error;
+            }
 
-        // Update custom metadata (optional, if you have additional database logic)
-        const { error: metadataError } = await supabase
-            .from('users') // Replace 'users' with your custom table name, if any
-            .update({
-                name: formData.name,
-                phone: formData.phone,
-                company: formData.company,
-            })
-            .eq('id', data.user?.id);
-
-        setIsLoading(false);
-
-        if (metadataError) {
-            setMessage(`Error updating metadata: ${metadataError.message}`);
-        } else {
             setMessage('Profile updated successfully!');
+        } catch (error) {
+            console.error('Error updating profile:', error.message);
+            setMessage(`Error updating profile: ${error.message}`);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center py-12">
+        <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-gray-100 flex flex-col items-center py-12">
             <h1 className="text-4xl font-extrabold mb-6">Your Profile</h1>
 
             {isLoading ? (
-                <p>Loading...</p>
+                <p className="text-lg font-semibold">Loading...</p>
             ) : (
-                <div className="w-full max-w-xl bg-gray-800 p-6 rounded-md shadow-md">
+                <div className="w-full max-w-xl bg-gray-800 p-6 rounded-lg shadow-md">
                     <h2 className="text-2xl font-bold mb-4">Profile Information</h2>
-                    <div className="space-y-6">
+                    <form className="space-y-6">
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium text-gray-300">
                                 Name
@@ -100,7 +89,7 @@ export default function ProfilePage() {
                                 value={formData.name}
                                 onChange={handleChange}
                                 placeholder="Your Name"
-                                className="w-full p-3 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
 
@@ -115,7 +104,7 @@ export default function ProfilePage() {
                                 value={formData.email}
                                 onChange={handleChange}
                                 placeholder="Your Email"
-                                className="w-full p-3 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
 
@@ -130,7 +119,7 @@ export default function ProfilePage() {
                                 value={formData.phone}
                                 onChange={handleChange}
                                 placeholder="Your Phone Number"
-                                className="w-full p-3 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
 
@@ -145,22 +134,31 @@ export default function ProfilePage() {
                                 value={formData.company}
                                 onChange={handleChange}
                                 placeholder="Your Company"
-                                className="w-full p-3 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-4 py-2 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-                    </div>
 
-                    <button
-                        onClick={handleSave}
-                        disabled={isLoading}
-                        className={`mt-6 w-full py-3 ${
-                            isLoading ? 'bg-gray-600' : 'bg-blue-500 hover:bg-blue-400'
-                        } text-gray-100 font-bold rounded-md focus:outline-none`}
-                    >
-                        {isLoading ? 'Saving...' : 'Save Changes'}
-                    </button>
+                        <button
+                            type="button"
+                            onClick={handleSave}
+                            disabled={isLoading}
+                            className={`mt-6 w-full py-3 ${
+                                isLoading ? 'bg-gray-600' : 'bg-blue-500 hover:bg-blue-400'
+                            } text-gray-100 font-bold rounded-md focus:outline-none`}
+                        >
+                            {isLoading ? 'Saving...' : 'Save Changes'}
+                        </button>
+                    </form>
 
-                    {message && <p className="mt-4 text-sm text-gray-400 text-center">{message}</p>}
+                    {message && (
+                        <p
+                            className={`mt-4 text-center text-sm ${
+                                message.includes('Error') ? 'text-red-400' : 'text-green-400'
+                            }`}
+                        >
+                            {message}
+                        </p>
+                    )}
                 </div>
             )}
         </div>

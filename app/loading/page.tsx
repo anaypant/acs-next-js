@@ -53,8 +53,34 @@ export default function LoadingPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 flex items-center justify-center">
-      <p>{message}</p>
+    <div className="min-h-screen bg-[#1B1C28] text-gray-100 flex flex-col items-center justify-center">
+      {/* Loading Animation */}
+      <div className="flex items-center justify-center mb-6">
+        <div className="loader"></div>
+      </div>
+
+      {/* Message */}
+      <p className="text-lg">{message}</p>
+
+      <style jsx>{`
+        .loader {
+          border: 6px solid rgba(255, 255, 255, 0.2);
+          border-top: 6px solid #8FA1D0;
+          border-radius: 50%;
+          width: 50px;
+          height: 50px;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
     </div>
   );
 }

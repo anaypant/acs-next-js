@@ -1,114 +1,262 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import 'normalize.css';
+import { Box, Typography, Button, Container, Grid, Card, CardContent, TextField } from '@mui/material';
 
 export default function LandingPage() {
+    const [searchPlaceholder, setSearchPlaceholder] = useState('');
+    const searchSuggestions = [
+        'AI tools for real estate',
+        'Streamline your workflow',
+        'Predictive analytics',
+        'Effortless communication',
+        'Seamless CRM integrations',
+    ];
+    let suggestionIndex = 0;
+
+    useEffect(() => {
+        const cyclePlaceholders = () => {
+            setSearchPlaceholder(searchSuggestions[suggestionIndex]);
+            suggestionIndex = (suggestionIndex + 1) % searchSuggestions.length;
+        };
+        const interval = setInterval(cyclePlaceholders, 2000); // Change every 2 seconds
+        return () => clearInterval(interval);
+    }, []);
+
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-black text-gray-100 flex flex-col font-sans">
+        <Box sx={{ minHeight: '100vh', bgcolor: 'rgb(18, 20, 35)', color: 'rgb(210, 210, 230)' }}>
             <Navbar />
 
             {/* Hero Section */}
-            <header className="flex-1 flex flex-col items-center justify-center p-6 md:p-12 text-center">
-                <motion.h1
-                    className="text-5xl md:text-7xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500"
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    minHeight: '90vh',
+                    position: 'relative',
+                    overflow: 'hidden',
+                }}
+            >
+                {/* Layered Background Effects */}
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: '-20%',
+                        left: '-20%',
+                        width: '600px',
+                        height: '600px',
+                        background: 'radial-gradient(circle, rgba(233,69,96,0.8) 0%, rgba(130,160,255,0) 70%)',
+                        filter: 'blur(150px)',
+                        zIndex: 0,
+                    }}
+                ></Box>
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        bottom: '-15%',
+                        right: '-15%',
+                        width: '500px',
+                        height: '500px',
+                        background: 'radial-gradient(circle, rgba(130,160,255,0.8) 0%, rgba(233,69,96,0) 70%)',
+                        filter: 'blur(150px)',
+                        zIndex: 0,
+                    }}
+                ></Box>
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        bottom: '10%',
+                        left: '25%',
+                        width: '300px',
+                        height: '300px',
+                        background: 'radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(233,69,96,0) 70%)',
+                        filter: 'blur(100px)',
+                        zIndex: 0,
+                    }}
+                ></Box>
+
+                {/* Title */}
+                <motion.div
                     initial={{ opacity: 0, y: -50 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 1 }}
+                    style={{ position: 'relative', zIndex: 1 }}
                 >
-                    Revolutionize Real Estate with AI
-                </motion.h1>
-                <motion.p
-                    className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl"
+                    <Typography
+                        variant="h2"
+                        fontWeight="bold"
+                        sx={{
+                            mb: 3,
+                            fontSize: { xs: '2rem', md: '3.5rem' },
+                            background: 'linear-gradient(to right, rgb(130, 160, 255), rgb(233, 69, 96))',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                        }}
+                    >
+                        Transform Your Real Estate Business
+                    </Typography>
+                </motion.div>
+
+                {/* Subtitle */}
+                <motion.div
                     initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 1, delay: 0.5 }}
+                    style={{ position: 'relative', zIndex: 1 }}
                 >
-                    Empowering realtors with cutting-edge AI tools to simplify and optimize their business processes.
-                </motion.p>
-                <motion.a
-                    href="#features"
-                    className="px-8 py-4 bg-blue-500 text-gray-100 rounded-lg shadow-lg hover:bg-blue-600 hover:shadow-xl transition-all transform hover:scale-105"
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
-                    whileHover={{ scale: 1.1 }}
-                    transition={{ duration: 0.3 }}
+                    <Typography
+                        variant="h6"
+                        sx={{
+                            mb: 4,
+                            maxWidth: '600px',
+                            mx: 'auto',
+                            color: 'rgb(190, 190, 210)',
+                        }}
+                    >
+                        Empowering realtors with cutting-edge AI solutions for analytics, communication, and efficiency.
+                    </Typography>
+                </motion.div>
+
+                {/* Search Bar */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 1, delay: 1 }}
+                    style={{ position: 'relative', zIndex: 1 }}
                 >
-                    Get Started
-                </motion.a>
-            </header>
+                    <Box
+                        sx={{
+                            mb: 4,
+                            maxWidth: '600px',
+                            mx: 'auto',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 2,
+                            borderRadius: '50px',
+                            overflow: 'hidden',
+                            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3)',
+                            background: 'linear-gradient(to right, rgb(55, 56, 75), rgb(65, 66, 85))',
+                        }}
+                    >
+                        <TextField
+                            variant="standard"
+                            placeholder={searchPlaceholder}
+                            InputProps={{
+                                disableUnderline: true,
+                            }}
+                            sx={{
+                                flex: 1,
+                                px: 4,
+                                py: 1.5,
+                                fontSize: '1rem',
+                                fontWeight: 500,
+                                color: 'rgb(210, 210, 230)',
+                                background: 'transparent',
+                                '&::placeholder': { color: 'rgb(160, 160, 180)', opacity: 1 },
+                                '& input': { textAlign: 'center' },
+                            }}
+                        />
+                        <Button
+                            variant="contained"
+                            sx={{
+                                px: 4,
+                                py: 1.5,
+                                fontWeight: 'bold',
+                                borderRadius: '50px',
+                                color: 'white',
+                                background: 'linear-gradient(to right, rgb(130, 160, 255), rgb(233, 69, 96))',
+                                boxShadow: '0 4px 15px rgba(233, 69, 96, 0.5)',
+                                transition: 'transform 0.2s ease',
+                                '&:hover': {
+                                    background: 'linear-gradient(to right, rgb(150, 180, 255), rgb(255, 90, 120))',
+                                    transform: 'scale(1.05)',
+                                },
+                            }}
+                        >
+                            Search
+                        </Button>
+                    </Box>
+                </motion.div>
+            </Box>
 
             {/* Features Section */}
-            <section id="features" className="py-16 bg-gray-800">
-                <div className="container mx-auto px-6 md:px-12 text-center">
-                    <motion.h2
-                        className="text-4xl font-bold text-gray-100 mb-8"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.8 }}
-                    >
-                        Features
-                    </motion.h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <FeatureCard
-                            title="AI-Powered Communication"
-                            description="Automate and personalize your email services and lead communications."
-                        />
-                        <FeatureCard
-                            title="Smart CRM Integration"
-                            description="Seamlessly manage and track your leads with intelligent tools."
-                        />
-                        <FeatureCard
-                            title="On-Demand Maintenance + Consultation"
-                            description="Showcase properties with stunning AI-generated virtual staging."
-                        />
-                    </div>
-                </div>
-            </section>
+            <Container id="features" sx={{ py: 8 }}>
+                <Typography
+                    variant="h4"
+                    fontWeight="bold"
+                    textAlign="center"
+                    sx={{ mb: 6, color: 'rgb(130, 160, 255)' }}
+                >
+                    Features
+                </Typography>
+                <Grid container spacing={4}>
+                    {features.map((feature, index) => (
+                        <Grid item xs={12} md={4} key={index}>
+                            <motion.div
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6 }}
+                                viewport={{ once: true }}
+                            >
+                                <Card
+                                    sx={{
+                                        bgcolor: 'rgb(55, 56, 75)',
+                                        color: 'rgb(210, 210, 230)',
+                                        p: 2,
+                                        borderRadius: 2,
+                                        '&:hover': { boxShadow: '0px 4px 20px rgba(233, 69, 96, 0.5)' },
+                                    }}
+                                >
+                                    <CardContent>
+                                        <Typography
+                                            variant="h5"
+                                            fontWeight="bold"
+                                            gutterBottom
+                                            sx={{ color: 'rgb(130, 160, 255)' }}
+                                        >
+                                            {feature.title}
+                                        </Typography>
+                                        <Typography variant="body1">{feature.description}</Typography>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        </Grid>
+                    ))}
+                </Grid>
+            </Container>
 
-            {/* About Section */}
-            <section id="about" className="py-16 bg-gradient-to-t from-gray-800 to-black">
-                <div className="container mx-auto px-6 md:px-12 text-center">
-                    <motion.h2
-                        className="text-4xl font-bold text-gray-100 mb-8"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 1 }}
-                    >
-                        About Us
-                    </motion.h2>
-                    <motion.p
-                        className="text-gray-300 max-w-3xl mx-auto text-lg leading-relaxed"
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 1, delay: 0.2 }}
-                    >
-                        At ACS, we are dedicated to transforming the real estate industry with innovative AI tools. Our mission is
-                        to empower realtors by providing solutions that enhance efficiency, productivity, and success.
-                    </motion.p>
-                </div>
-            </section>
-
+            {/* Footer */}
             <Footer />
-        </div>
+        </Box>
     );
 }
 
-function FeatureCard({ title, description }) {
+const features = [
+    {
+        title: 'AI-Powered Design',
+        description: 'Generate stunning designs with minimal effort.',
+    },
+    {
+        title: 'Real-Time Collaboration',
+        description: 'Work with your team in a synchronized environment.',
+    },
+    {
+        title: 'Seamless Deployment',
+        description: 'Publish your site directly with one click.',
+    },
+];
+
+function Footer() {
     return (
-        <motion.div
-            className="p-8 bg-gray-700 rounded-lg shadow-lg transform hover:scale-105 hover:shadow-xl transition-all"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-        >
-            <h3 className="text-2xl font-semibold text-blue-400 mb-4">
-                {title}
-            </h3>
-            <p className="text-gray-300">{description}</p>
-        </motion.div>
+        <Box sx={{ py: 6, bgcolor: 'rgb(65, 66, 85)', color: 'rgb(160, 160, 180)' }}>
+            <Container>
+                <Typography textAlign="center">© {new Date().getFullYear()} ACS. All rights reserved.</Typography>
+            </Container>
+        </Box>
     );
 }

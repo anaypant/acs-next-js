@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchEmailsFromDynamoDB } from '../utils/aws/functions';
 import { supabase } from '../utils/supabase/supabase';
+import { FaHome, FaDraftingCompass, FaUserFriends, FaEnvelope, FaCreditCard, FaCog } from 'react-icons/fa';
 
 interface Email {
     conversationId: string;
@@ -82,17 +83,41 @@ export default function DashboardPage() {
     const unreadConversations = threads.filter((thread) => thread.type === "unread").length;
 
     return (
-        <div className="flex h-screen bg-gradient-to-br from-blue-900 via-gray-900 to-gray-800 text-white font-schad-cn">
+        <div className="flex h-screen bg-gradient-to-br from-blue-900 via-gray-900 to-gray-800 text-white font-sans">
             {/* Sidebar */}
-            <aside className="w-1/4 bg-gradient-to-br from-gray-800 to-gray-700 shadow-lg p-6">
-                <h2 className="text-3xl font-bold mb-8 tracking-wide">Dashboard</h2>
-                <nav className="space-y-6">
-                    <a href="#" className="block py-2 px-4 rounded-lg bg-gray-700 hover:bg-blue-700 transition-all text-center">Overview</a>
-                    <a href="#" className="block py-2 px-4 rounded-lg bg-gray-700 hover:bg-blue-700 transition-all text-center">Drafts</a>
-                    <a href="#" className="block py-2 px-4 rounded-lg bg-gray-700 hover:bg-blue-700 transition-all text-center">Contacts</a>
-                    <a href="#" className="block py-2 px-4 rounded-lg bg-gray-700 hover:bg-blue-700 transition-all text-center">Conversations</a>
-                    <a href="#" className="block py-2 px-4 rounded-lg bg-gray-700 hover:bg-blue-700 transition-all text-center">Billing</a>
-                    <a href="./settings" className="block py-2 px-4 rounded-lg bg-gray-700 hover:bg-blue-700 transition-all text-center">Settings</a>
+            <aside className="w-64 bg-gradient-to-b from-gray-900 to-gray-800 p-6 flex flex-col shadow-lg">
+                <h2 className="text-3xl font-bold mb-8 tracking-wide text-center">Dashboard</h2>
+                <nav className="flex flex-col space-y-4">
+                    <SidebarLink
+                        icon={<FaHome />}
+                        label="Overview"
+                        onClick={() => router.push('/dashboard')}
+                    />
+                    <SidebarLink
+                        icon={<FaDraftingCompass />}
+                        label="Drafts"
+                        onClick={() => router.push('/drafts')}
+                    />
+                    <SidebarLink
+                        icon={<FaUserFriends />}
+                        label="Contacts"
+                        onClick={() => router.push('/contacts')}
+                    />
+                    <SidebarLink
+                        icon={<FaEnvelope />}
+                        label="Conversations"
+                        onClick={() => router.push('/conversations')}
+                    />
+                    <SidebarLink
+                        icon={<FaCreditCard />}
+                        label="Billing"
+                        onClick={() => router.push('/billing')}
+                    />
+                    <SidebarLink
+                        icon={<FaCog />}
+                        label="Settings"
+                        onClick={() => router.push('/settings')}
+                    />
                 </nav>
             </aside>
 
@@ -110,14 +135,8 @@ export default function DashboardPage() {
 
                 {/* Dashboard Widgets */}
                 <div className="p-6 grid grid-cols-2 gap-6">
-                    <div className="text-center bg-gray-800 p-6 rounded-lg shadow-lg transform hover:scale-105 transition-all">
-                        <h2 className="text-xl font-semibold">Total Conversations</h2>
-                        <p className="text-3xl font-bold mt-2">{totalConversations}</p>
-                    </div>
-                    <div className="text-center bg-gray-800 p-6 rounded-lg shadow-lg transform hover:scale-105 transition-all">
-                        <h2 className="text-xl font-semibold">Unread Conversations</h2>
-                        <p className="text-3xl font-bold mt-2">{unreadConversations}</p>
-                    </div>
+                    <DashboardWidget title="Total Conversations" value={totalConversations} />
+                    <DashboardWidget title="Unread Conversations" value={unreadConversations} />
                 </div>
 
                 {/* Email Threads */}
@@ -143,6 +162,27 @@ export default function DashboardPage() {
                     )}
                 </main>
             </div>
+        </div>
+    );
+}
+
+function SidebarLink({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
+    return (
+        <button
+            onClick={onClick}
+            className="flex items-center space-x-3 text-left px-4 py-3 rounded-lg hover:bg-blue-700 transition-all"
+        >
+            <span className="text-lg">{icon}</span>
+            <span className="font-medium">{label}</span>
+        </button>
+    );
+}
+
+function DashboardWidget({ title, value }: { title: string; value: number }) {
+    return (
+        <div className="text-center bg-gray-800 p-6 rounded-lg shadow-lg transform hover:scale-105 transition-all">
+            <h2 className="text-xl font-semibold">{title}</h2>
+            <p className="text-3xl font-bold mt-2">{value}</p>
         </div>
     );
 }
