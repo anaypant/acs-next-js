@@ -86,32 +86,20 @@ export default function SettingsPage() {
                 throw new Error("Failed to fetch user session.");
             }
 
-            const { id: userId, email } = session.user;
-
-            // Create a Supabase Admin Client
-            const adminSupabase = createServerClient();
-
-            // Delete user from Supabase (admin API)
-            const { error: adminDeleteError } = await adminSupabase.auth.admin.deleteUser(userId);
-
-            if (adminDeleteError) {
-                throw new Error(`Failed to delete user from Supabase: ${adminDeleteError.message}`);
-            }
-
-            // Call API to delete user from DynamoDB
             const response = await fetch('/api/users/delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     jwt: session.access_token,
-                    email,
-                    uid: userId,
+                    email: session.user.email,
+                    uid: session.user.id,
                 }),
             });
 
+            const result = await response.json();
+
             if (!response.ok) {
-                // throw new Error("Failed to delete account from DynamoDB.");
-                console.error("Failed to delete account from DynamoDB.");
+                throw new Error(result.error || "Failed to delete account.");
             }
 
             setSuccess("Your account has been deleted successfully.");

@@ -1,16 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import { DeleteItemCommand } from "@aws-sdk/client-dynamodb";
-import dynamoDBClient from "@/app/utils/aws/dynamodb";
-
-// Initialize Supabase Admin client
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-// Initialize AWS DynamoDB client
-const client = dynamoDBClient();
+import {supabase} from "@/app/utils/supabase/supabase";
+import {invokeLambda} from "@/app/utils/aws/lambda";
+import {createServerClient} from "@/app/utils/supabase/server";
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,39 +9,56 @@ export async function POST(req: NextRequest) {
 
     if (!jwt || !email || !uid) {
       return NextResponse.json(
-        { error: "Missing required fields: jwt, email, uid" },
-        { status: 400 }
+          { error: "Missing required fields: jwt, email, uid" },
+          { status: 400 }
       );
     }
 
-    // Step 1: Verify the JWT token using Supabase Admin API
-    const { data: user, error: verifyError } = await supabaseAdmin.auth.getUser(jwt);
+
+    // Step 1: Verify JWT with Supabase
+    const { data, error: verifyError } = await supabase.auth.getUser(jwt);
+
+    console.log("Supabase response:", data); // Debugging: Log the entire response structure
+
+    const user = data?.user; // Adjust path based on response structure
+
 
     if (verifyError || !user || user.id !== uid || user.email !== email) {
       return NextResponse.json(
-        { error: "Unauthorized request or invalid JWT token." },
-        { status: 401 }
+          { error: "Unauthorized request or invalid JWT token." },
+          { status: 401 }
       );
     }
 
-    // Step 2: Delete user entry from DynamoDB
-    const deleteParams = {
-      TableName: "Users", // DynamoDB table name from env
-      Key: {
-        email: { S: email }, // Assuming the primary key in your DynamoDB table is "email"
-      },
-    };
+    // Step 2: Invoke Lambda with clientId payload
+    const lambdaPayload = { clientId: uid };
+    const lambdaResponse = await invokeLambda("DeleteUserSupabase", lambdaPayload);
+    console.log(lambdaResponse);
 
-    const deleteCommand = new DeleteItemCommand(deleteParams);
-    await client.send(deleteCommand);
+    if (!lambdaResponse || lambdaResponse.statusCode !== 200) {
+      return NextResponse.json(
+          { error: "Failed to delete user from DynamoDB." },
+          { status: 500 }
+      );
+    }
 
-    // Step 3: Respond with success
-    return NextResponse.json({ status: "User deleted successfully!" }, { status: 200 });
+    // Step 3: Delete user from Supabase
+    const adminClient = createServerClient();
+    const { error: deleteError } = await adminClient.auth.admin.deleteUser(uid);
+
+    if (deleteError) {
+      return NextResponse.json(
+          { error: "Failed to delete user from Supabase." },
+          { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ message: "User deleted successfully!" }, { status: 200 });
   } catch (error) {
     console.error("Error deleting user:", error);
     return NextResponse.json(
-      { error: "Failed to delete user. Please try again later." },
-      { status: 500 }
+        { error: "An error occurred while processing the request." },
+        { status: 500 }
     );
   }
 }
