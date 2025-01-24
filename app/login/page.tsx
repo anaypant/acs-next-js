@@ -66,21 +66,28 @@ export default function LoginPage() {
     setIsLoading(true);
     setMessage('');
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`, // Ensure users are redirected post-login
-      },
-    });
+    try {
+      // Start Google OAuth flow
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/loading`, // Redirect to the loading page after OAuth
+        },
+      });
 
-    setIsLoading(false);
+      if (error) {
+        setMessage(`Error: ${error.message}`);
+        setIsLoading(false);
+        return;
+      }
 
-    if (error) {
-      setMessage(`Error: ${error.message}`);
-    } else {
-      setMessage('Redirecting to Google for login...');
-    }
-  };
+      setMessage('Redirecting to Google...');
+    } catch (err) {
+      console.error('Error during Google sign-in:', err);
+      setMessage('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center justify-center px-6">

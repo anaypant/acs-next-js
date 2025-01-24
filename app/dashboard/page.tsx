@@ -1,40 +1,66 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation'; // Use this instead of next/router
+import { useRouter } from 'next/navigation';
 import { fetchEmailsFromDynamoDB } from '../utils/aws/functions';
+import { supabase } from '../utils/supabase/supabase';
 
 interface Email {
-    clientId: string;
-    threadId: string;
-    emailId: string;
-    timestamp: string;
-    from: string;
-    to: string;
-    subject: string;
+    conversationId: string;
+    responseId: string;
+    associatedAccount: string;
     body: string;
-    read: string;
+    receiver: string;
+    s3Location: string;
+    sender: string;
+    subject: string;
+    timestamp: string;
+    type: string;
 }
 
 export default function DashboardPage() {
+    const [clientId, setClientId] = useState<string | null>(null);
     const [threads, setThreads] = useState<Email[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const router = useRouter(); // Initialize useRouter here
+    const router = useRouter();
 
     useEffect(() => {
+        const fetchClientId = async () => {
+            try {
+                // Fetch clientId from Supabase session
+                const { data, error } = await supabase.auth.getSession();
+                if (error || !data.session) {
+                    throw new Error("Failed to retrieve session.");
+                }
+                setClientId(data.session.user.id);
+            } catch (err) {
+                console.error("Error fetching client ID:", err);
+                setError("Failed to retrieve client ID. Please log in again.");
+            }
+        };
+
+        fetchClientId();
+    }, []);
+
+    useEffect(() => {
+        if (!clientId) return;
+
         const fetchEmails = async () => {
             try {
-                const tableName = "sampleEmailTable2";
-                const keyConditionExpression = "ClientID = :clientId";
+                setLoading(true);
+
+                const tableName = "Conversations";
+                const keyConditionExpression = "associated_account = :clientId";
                 const expressionAttributeValues = {
-                    ":clientId": { S: "anay" }, // Replace "anay" with dynamic data if needed
+                    ":clientId": { S: clientId }, // Use dynamic client ID
                 };
 
                 const emails = await fetchEmailsFromDynamoDB(
                     tableName,
                     keyConditionExpression,
-                    expressionAttributeValues
+                    expressionAttributeValues,
+                    "associated_account-timestamp-index"
                 );
 
                 setThreads(emails);
@@ -47,11 +73,10 @@ export default function DashboardPage() {
         };
 
         fetchEmails();
-    }, []);
+    }, [clientId]);
 
-    const handleThreadClick = (threadId: string) => {
-        console.log(`Navigating to /conversation/${threadId}`);
-        router.push(`/conversation/${threadId}`); // Use router.push for navigation
+    const handleThreadClick = (conversationId: string) => {
+        router.push(`/conversation/${conversationId}`);
     };
 
     return (
@@ -65,12 +90,7 @@ export default function DashboardPage() {
                     <a href="#" className="block py-2 px-4 rounded-md hover:bg-gray-700">Contacts</a>
                     <a href="#" className="block py-2 px-4 rounded-md hover:bg-gray-700">Conversations</a>
                     <a href="#" className="block py-2 px-4 rounded-md hover:bg-gray-700">Billing</a>
-                    <a
-                        href="./settings"
-                        className="block py-2 px-4 rounded-md hover:bg-gray-700"
-                    >
-                        Settings
-                    </a>
+                    <a href="./settings" className="block py-2 px-4 rounded-md hover:bg-gray-700">Settings</a>
                 </nav>
             </aside>
 
@@ -86,52 +106,23 @@ export default function DashboardPage() {
                     </button>
                 </header>
 
-                <div className="p-6 bg-gray-700 flex justify-between items-center rounded-md">
-                    <div className="text-center">
-                        <h2 className="text-xl font-semibold">Total Threads</h2>
-                        <p className="text-lg">{threads.length}</p>
-                    </div>
-                    <div className="text-center">
-                        <h2 className="text-xl font-semibold">Total Senders</h2>
-                        <p className="text-lg">{new Set(threads.map(email => email.from)).size}</p>
-                    </div>
-                    <div className="text-center">
-                        <h2 className="text-xl font-semibold">Unread Threads</h2>
-                        <p className="text-lg">{threads.filter(email => email.read === "").length}</p>
-                    </div>
-                </div>
-
                 <main className="flex-1 p-6 overflow-y-auto">
-                    <h2 className="text-lg font-semibold mb-4">Email Threads</h2>
                     {loading ? (
-                        <p>Loading threads...</p>
+                        <p>Loading...</p>
                     ) : error ? (
-                        <p className="text-red-500">Error: {error}</p>
-                    ) : threads.length === 0 ? (
-                        <p>No threads found.</p>
+                        <p className="text-red-500">{error}</p>
                     ) : (
-                        <div className="space-y-4">
-                            {threads.map((thread, index) => (
-                                <div
-                                    key={index}
-                                    className="p-4 bg-gray-800 rounded-md flex items-center justify-between cursor-pointer hover:bg-gray-700"
-                                    onClick={() => handleThreadClick(thread.threadId)}
-                                >
-                                    <div>
-                                        <div className="mb-2">
-                                            <p><strong>Thread:</strong> {thread.from}</p>
-                                        </div>
-                                        <p className="text-gray-300 text-sm">
-                                            Last updated: {new Date(thread.timestamp).toLocaleString()}
-                                        </p>
-                                    </div>
-                                    {/* Notification Badge */}
-                                    {thread.read === "" && (
-                                        <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
+                        threads.map((thread) => (
+                            <div
+                                key={thread.conversationId}
+                                className="p-4 bg-gray-800 rounded-md cursor-pointer hover:bg-gray-700"
+                                onClick={() => handleThreadClick(thread.conversationId)}
+                            >
+                                <p className="font-bold">{thread.subject}</p>
+                                <p className="text-gray-400">{thread.sender}</p>
+                                <p className="text-gray-500 text-sm">{new Date(thread.timestamp).toLocaleString()}</p>
+                            </div>
+                        ))
                     )}
                 </main>
             </div>

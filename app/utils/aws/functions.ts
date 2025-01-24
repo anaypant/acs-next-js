@@ -2,15 +2,16 @@ import { QueryCommand } from '@aws-sdk/client-dynamodb';
 import dynamoDBClient from "@/app/utils/aws/dynamodb";
 
 interface Email {
-    clientId: string;
-    threadId: string;
-    emailId: string;
-    timestamp: string;
-    from: string;
-    to: string;
-    subject: string;
+    conversationId: string;
+    responseId: string;
+    associatedAccount: string;
     body: string;
-    read: string;
+    receiver: string;
+    s3Location: string;
+    sender: string;
+    subject: string;
+    timestamp: string;
+    type: string;
 }
 
 /**
@@ -19,14 +20,16 @@ interface Email {
  * @param {string} tableName - The DynamoDB table name.
  * @param {string} keyConditionExpression - The key condition expression for the query.
  * @param {Record<string, any>} expressionAttributeValues - The attribute values for the query.
+ * @param {string} [indexName] - The optional index name to query.
  * @returns {Promise<Email[]>} - A promise that resolves to a list of emails.
  */
 export const fetchEmailsFromDynamoDB = async (
     tableName: string,
     keyConditionExpression: string,
-    expressionAttributeValues: Record<string, any>
+    expressionAttributeValues: Record<string, any>,
+    indexName?: string
 ): Promise<Email[]> => {
-    const client = dynamoDBClient(); // Replace 'your-region' with your AWS region
+    const client = dynamoDBClient();
 
     try {
         const params = {
@@ -35,41 +38,43 @@ export const fetchEmailsFromDynamoDB = async (
             ExpressionAttributeValues: expressionAttributeValues,
         };
 
+        if (indexName) {
+            params.IndexName = indexName;
+        }
+
         const command = new QueryCommand(params);
         const response = await client.send(command);
         const items = response.Items || [];
 
+        console.log("Fetched Items:", items);
+
         // Map and format the data
-        const formattedData: Email[] = items.map((item) => {
-            const compositeKey = item["ThreadID#MessageID"]?.S || ""; // Composite key
-            const [threadId] = compositeKey.split("#"); // Extract ThreadID
+        const formattedData: Email[] = items.map((item) => ({
+            conversationId: item.conversation_id?.S || "",
+            responseId: item.response_id?.S || "",
+            associatedAccount: item.associated_account?.S || "",
+            body: item.body?.S || "",
+            receiver: item.receiver?.S || "",
+            s3Location: item.s3_location?.S || "",
+            sender: item.sender?.S || "",
+            subject: item.subject?.S || "",
+            timestamp: item.timestamp?.S || "",
+            type: item.type?.S || "",
+        }));
 
-            return {
-                clientId: item.ClientID?.S || "",
-                threadId: threadId || "",
-                emailId: compositeKey.split("#")[1] || "",
-                timestamp: item.Timestamp?.S || "",
-                from: item.From?.S || "",
-                to: item.To?.S || "",
-                subject: item.Subject?.S || "",
-                body: item.Body?.S || "",
-                read: item.Read?.S || "",
-            };
-        });
-
-        // Group and retain the most recent email per thread
-        const mostRecentEmails: { [key: string]: Email } = {};
+        // Group and retain the most recent response per conversation
+        const mostRecentResponses: { [key: string]: Email } = {};
         formattedData.forEach((email) => {
             if (
-                !mostRecentEmails[email.threadId] ||
-                new Date(email.timestamp) > new Date(mostRecentEmails[email.threadId].timestamp)
+                !mostRecentResponses[email.conversationId] ||
+                new Date(email.timestamp) > new Date(mostRecentResponses[email.conversationId].timestamp)
             ) {
-                mostRecentEmails[email.threadId] = email;
+                mostRecentResponses[email.conversationId] = email;
             }
         });
 
         // Convert the object back to an array
-        return Object.values(mostRecentEmails);
+        return Object.values(mostRecentResponses);
     } catch (err) {
         console.error("DynamoDB Error:", err);
         throw new Error("Failed to fetch data from DynamoDB.");
