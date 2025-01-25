@@ -3,44 +3,124 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../utils/supabase/supabase';
+import { motion } from 'framer-motion';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [message, setMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // Loading state
+  const [isLoading, setIsLoading] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   const router = useRouter();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setMessage('');
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: formData.email,
-      password: formData.password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
 
-    setIsLoading(false);
+      if (error) {
+        setMessage(`Error: ${error.message}`);
+      } else if (data.user && !data.user.email_confirmed_at) {
+        setMessage('Error: Please verify your email before logging in.');
+        await supabase.auth.signOut();
+      } else {
+        setMessage('Login successful!');
+        router.push('/dashboard');
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    if (error) {
-      setMessage(`Error: ${error.message}`);
-    } else {
-      setMessage('Login successful!');
-      router.push('/'); // Redirect to dashboard
+  const handleForgotPassword = async () => {
+    setIsResettingPassword(true);
+    setMessage('');
+
+    if (!formData.email) {
+      setMessage('Please enter your email address to reset your password.');
+      setIsResettingPassword(false);
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        setMessage(`Error: ${error.message}`);
+      } else {
+        setMessage('Password reset email sent! Check your inbox.');
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    setMessage('');
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/loading`,
+        },
+      });
+
+      if (error) {
+        setMessage(`Error: ${error.message}`);
+      } else {
+        setMessage('Redirecting to Google...');
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center justify-center px-6">
-      <h1 className="text-4xl font-extrabold mb-6">Login to ACS</h1>
-      <form onSubmit={handleSubmit} className="w-full max-w-md space-y-6 bg-gray-800 p-6 rounded-md shadow-md">
+    <motion.div
+      className="min-h-screen bg-[#1B1C28] text-gray-100 flex flex-col items-center justify-center px-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <motion.h1
+        className="text-4xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-[#8FA1D0] to-[#E94560]"
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+      >
+        Login to ACS
+      </motion.h1>
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-md space-y-6 bg-[#24253A] p-6 rounded-lg shadow-lg"
+      >
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-300">Email</label>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-300">
+            Email
+          </label>
           <input
             type="email"
             id="email"
@@ -48,11 +128,14 @@ export default function LoginPage() {
             value={formData.email}
             onChange={handleChange}
             required
-            className="w-full p-3 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
+            aria-label="Email Address"
+            className="w-full p-3 bg-[#33354A] text-gray-100 rounded-md focus:ring-2 focus:ring-[#8FA1D0]"
           />
         </div>
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-300">Password</label>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-300">
+            Password
+          </label>
           <input
             type="password"
             id="password"
@@ -60,20 +143,51 @@ export default function LoginPage() {
             value={formData.password}
             onChange={handleChange}
             required
-            className="w-full p-3 bg-gray-700 text-gray-100 rounded-md focus:ring-2 focus:ring-blue-500"
+            aria-label="Password"
+            className="w-full p-3 bg-[#33354A] text-gray-100 rounded-md focus:ring-2 focus:ring-[#8FA1D0]"
           />
         </div>
         <button
           type="submit"
           disabled={isLoading}
           className={`w-full py-3 ${
-            isLoading ? 'bg-gray-600' : 'bg-gray-700 hover:bg-gray-600'
+            isLoading ? 'bg-[#8FA1D0]' : 'bg-[#4B5C99] hover:bg-[#5C6DAA]'
           } text-gray-100 font-bold rounded-md focus:outline-none`}
         >
           {isLoading ? 'Logging in...' : 'Login'}
         </button>
       </form>
-      {message && <p className="mt-4 text-center text-sm text-gray-400">{message}</p>}
-    </div>
+
+      <p
+        onClick={handleForgotPassword}
+        className="mt-4 text-sm text-[#8FA1D0] hover:underline cursor-pointer"
+      >
+        {isResettingPassword ? 'Sending reset email...' : 'Forgot Password?'}
+      </p>
+
+      <div className="mt-6 w-full max-w-md">
+        <button
+          onClick={handleGoogleSignIn}
+          disabled={isLoading}
+          className={`w-full flex items-center justify-center py-3 px-4 ${
+            isLoading ? 'bg-[#33354A]' : 'bg-black hover:bg-[#454766]'
+          } text-white font-medium rounded-md shadow-md focus:outline-none`}
+        >
+          <img src="/google-icon.svg" alt="Google" className="w-5 h-5 mr-3" />
+          {isLoading ? 'Redirecting...' : 'Sign in with Google'}
+        </button>
+      </div>
+
+      {message && (
+        <motion.p
+          className="mt-4 text-center text-sm text-gray-400"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          {message}
+        </motion.p>
+      )}
+    </motion.div>
   );
 }

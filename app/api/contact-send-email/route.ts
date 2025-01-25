@@ -1,43 +1,53 @@
-import nodemailer from 'nodemailer';
 import { NextResponse } from 'next/server';
+import nodemailer from 'nodemailer';
 
-export async function POST(req) {
-    const body = await req.json();
-    console.log(body);
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
     const { name, email, message } = body;
+
     if (!name || !email || !message) {
-      return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
+      return NextResponse.json(
+        { message: 'All fields are required.' },
+        { status: 400 }
+      );
     }
 
+    // Configure Nodemailer transporter for Zoho SMTP
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.zoho.com', // Zoho SMTP server
+      port: 465, // SSL port
+      secure: true, // Use SSL
+      auth: {
+        user: process.env.ZOHO_EMAIL_USER, // Your Zoho email
+        pass: process.env.ZOHO_EMAIL_PASS, // Your Zoho app-specific password
+      },
+    });
 
-    try {
-      const transporter = nodemailer.createTransport({
-        host:"smtp.zoho.com",
-        service: 'Zoho', // Use your email service provider or SMTP settings
-        port: 587,
-        secure: false,   
-        auth: {
-          user: "anay.pant@automatedconsultancy.com", // Set your email in .env file
-          pass: "M0bucha3!!", // Set your email password in .env file
-        },
-        tls: {
-            rejectUnauthorized: false
-        }   
-      });
+    // Email options
+    const mailOptions = {
+      from: process.env.ZOHO_EMAIL_USER, // Your Zoho email
+      to: process.env.ZOHO_EMAIL_USER, // Send to yourself
+      subject: `New Contact Message from ${name}`,
+      text: `
+        Name: ${name}
+        Email: ${email}
+        Message: ${message}
+      `,
+    };
 
-      const mailOptions = {
-        from: email,
-        to: process.env.RECEIVER_EMAIL, // Email where the messages will be sent
-        subject: `New Contact Form Submission from ${name}`,
-        text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
-      };
+    // Send the email
+    await transporter.sendMail(mailOptions);
 
-      await transporter.sendMail(mailOptions);
-
-      return NextResponse.json({ success: 'Message sent successfully!' }, { status: 200 });
-    } catch (error) {
-      console.error('Error sending email:', error);
-      return NextResponse.json({ error: 'Failed to send the message.' }, { status: 500 });
-    }
-  
+    return NextResponse.json(
+      { message: 'Email sent successfully.' },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error('Error sending email:', error);
+    return NextResponse.json(
+      { message: 'Failed to send email. Please try again later.' },
+      { status: 500 }
+    );
+  }
 }
