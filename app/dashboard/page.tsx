@@ -60,7 +60,7 @@ export default function DashboardPage() {
                     tableName,
                     keyConditionExpression,
                     expressionAttributeValues,
-                    "associated_account-timestamp-index"
+                    "associated_account-is_first_email-index"
                 );
 
                 setThreads(emails);
