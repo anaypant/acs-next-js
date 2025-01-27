@@ -62,7 +62,7 @@ export default function DashboardPage() {
                     expressionAttributeValues,
                     "associated_account-is_first_email-index"
                 );
-
+                console.log("Fetched emails:", emails);
                 setThreads(emails);
             } catch (err) {
                 console.error("Error fetching emails:", err);

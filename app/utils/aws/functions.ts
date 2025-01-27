@@ -1,5 +1,4 @@
-import { QueryCommand } from '@aws-sdk/client-dynamodb';
-import dynamoDBClient from "@/app/utils/aws/dynamodb";
+import axios from 'axios';
 
 interface Email {
     conversationId: string;
@@ -29,52 +28,33 @@ export const fetchEmailsFromDynamoDB = async (
     expressionAttributeValues: Record<string, any>,
     indexName?: string
 ): Promise<Email[]> => {
-    const client = dynamoDBClient();
 
     try {
-        const params = {
-            TableName: tableName,
-            KeyConditionExpression: keyConditionExpression,
-            ExpressionAttributeValues: expressionAttributeValues,
-        };
-
-        if (indexName) {
-            params.IndexName = indexName;
-        }
-
-        const command = new QueryCommand(params);
-        const response = await client.send(command);
-        const items = response.Items || [];
+        const url = `${process.env.NEXT_PUBLIC_API_URL}/users/all-threads`;
+        console.log(url)
+        const res = await fetch(url,{credentials: "include"});
+        const data = await res.json();
+        
+        const items = data.threads || [];
 
         console.log("Fetched Items:", items);
 
         // Map and format the data
         const formattedData: Email[] = items.map((item) => ({
-            conversationId: item.conversation_id?.S || "",
-            responseId: item.response_id?.S || "",
-            associatedAccount: item.associated_account?.S || "",
-            body: item.body?.S || "",
-            receiver: item.receiver?.S || "",
-            s3Location: item.s3_location?.S || "",
-            sender: item.sender?.S || "",
-            subject: item.subject?.S || "",
-            timestamp: item.timestamp?.S || "",
-            type: item.type?.S || "",
+            conversationId: item.id || "",
+            responseId: item.response_id || "",
+            associatedAccount: item.associated_account || "",
+            body: item.body || "",
+            receiver: item.receiver || "",
+            s3Location: item.s3_location || "",
+            sender: item.sender || "",
+            subject: item.subject || "",
+            timestamp: item.timestamp || "",
+            type: item.type || "",
         }));
 
-        // Group and retain the most recent response per conversation
-        const mostRecentResponses: { [key: string]: Email } = {};
-        formattedData.forEach((email) => {
-            if (
-                !mostRecentResponses[email.conversationId] ||
-                new Date(email.timestamp) > new Date(mostRecentResponses[email.conversationId].timestamp)
-            ) {
-                mostRecentResponses[email.conversationId] = email;
-            }
-        });
-
         // Convert the object back to an array
-        return Object.values(mostRecentResponses);
+        return formattedData;
     } catch (err) {
         console.error("DynamoDB Error:", err);
         throw new Error("Failed to fetch data from DynamoDB.");

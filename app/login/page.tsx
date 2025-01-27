@@ -35,7 +35,29 @@ export default function LoginPage() {
         await supabase.auth.signOut();
       } else {
         setMessage('Login successful!');
-        router.push('/dashboard');
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include', // Ensures cookies are saved
+          body: JSON.stringify({
+            jwt: data.session.access_token, // Supabase JWT token
+            email: formData.email,
+            uid: data.user.id, // Supabase user ID
+          }),
+        });
+  
+        if (response.ok) {
+          const responseData = await response.json();
+          setMessage('Session created successfully.');
+          router.push('/dashboard');
+        } else {
+          const errorData = await response.json();
+          setMessage(`Login failed: ${errorData.message}`);
+        }
+
       }
     } catch (err) {
       console.error(err);

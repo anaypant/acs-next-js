@@ -1,5 +1,4 @@
 'use client';
-console.log("Lets go bitches")
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { DynamoDBClient, QueryCommand, PutItemCommand } from '@aws-sdk/client-dynamodb';
@@ -42,137 +41,35 @@ export default function ConversationPage() {
 
     const fetchConversation = async () => {
         try {
-            const client = dynamoDBClient();
-            const params = {
-                TableName: "sampleEmailTable2",
-                KeyConditionExpression: "ClientID = :clientId AND begins_with(#sortKey, :threadId)",
-                ExpressionAttributeNames: {
-                    "#sortKey": "ThreadID#MessageID",
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/threads/${threadId}`, {
+                headers: {
+                    'Content-Type': 'application/json',
                 },
-                ExpressionAttributeValues: {
-                    ":clientId": { S: "anay" },
-                    ":threadId": { S: threadId },
-                },
-            };
-
-            const command = new QueryCommand(params);
-            const response = await client.send(command);
-            const items = response.Items || [];
-
-            const formattedMessages: Message[] = items.map((item) => {
-                const compositeKey = item["ThreadID#MessageID"]?.S || "";
-                const [_, messageId] = compositeKey.split("#");
-
-                return {
-                    emailId: messageId || "",
-                    timestamp: item.Timestamp?.S || "",
-                    from: item.From?.S || "",
-                    to: item.To?.S || "",
-                    subject: item.Subject?.S || "",
-                    body: item.Body?.S || "",
-                    read: item.Read?.S || "",
-                };
+                credentials: 'include', // Ensures cookies are saved
             });
-
-            // set the "read" value of all messages with the same threadID and clientID to be true
-            const fetchConversation = async () => {
-                try {
-                    const client = dynamoDBClient();
-                    const params = {
-                        TableName: "sampleEmailTable2",
-                        KeyConditionExpression: "ClientID = :clientId AND begins_with(#sortKey, :threadId)",
-                        ExpressionAttributeNames: {
-                            "#sortKey": "ThreadID#MessageID",
-                        },
-                        ExpressionAttributeValues: {
-                            ":clientId": { S: "anay" },
-                            ":threadId": { S: threadId },
-                        },
+        
+            if (response.ok) {
+                const responseData = await response.json();
+                console.log(responseData);
+                const formattedMessages: Message[] = responseData.map((item) => {
+                    const compositeKey = item["response_id"] || "";
+                    const [_, messageId] = compositeKey.split("#");
+    
+                    return {
+                        emailId: messageId || "",
+                        timestamp: item.timestamp || "",
+                        from: item.from || "",
+                        to: item.to || "",
+                        subject: item.subject || "",
+                        body: item.body || "",
+                        read: item.read || "",
                     };
+                });
 
-                    const command = new QueryCommand(params);
-                    const response = await client.send(command);
-                    const items = response.Items || [];
-
-                    const formattedMessages: Message[] = items.map((item) => {
-                        const compositeKey = item["ThreadID#MessageID"]?.S || "";
-                        const [_, messageId] = compositeKey.split("#");
-
-                        return {
-                            emailId: messageId || "",
-                            timestamp: item.Timestamp?.S || "",
-                            from: item.From?.S || "",
-                            to: item.To?.S || "",
-                            subject: item.Subject?.S || "",
-                            body: item.Body?.S || "",
-                        };
-                    });
-
-                    // Sort messages by timestamp in descending order
-                    formattedMessages.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-                    // Update the most recent message to set its "read" attribute to true
-                    if (formattedMessages.length > 0) {
-                        const mostRecentMessage = formattedMessages[0];
-                        const updateParams = {
-                            TableName: "sampleEmailTable2",
-                            Key: {
-                                ClientID: { S: "anay" },
-                                "ThreadID#MessageID": { S: `${threadId}#${mostRecentMessage.emailId}` },
-                            },
-                            UpdateExpression: "SET #read = :read",
-                            ExpressionAttributeNames: {
-                                "#read": "Read",
-                            },
-                            ExpressionAttributeValues: {
-                                ":read": { S: "true" },
-                            },
-                        };
-
-                        const updateCommand = new UpdateItemCommand(updateParams);
-                        await client.send(updateCommand);
-                        console.log(`Marked message ${mostRecentMessage.emailId} as read.`);
-                    }
-
-                    setMessages(formattedMessages);
-                } catch (err) {
-                    console.error("Error fetching conversation:", err);
-                    setError("Failed to load conversation.");
-                } finally {
-                    setLoading(false);
-                }
-            };
-
-
-
-            // Sort messages by timestamp in descending order
-            formattedMessages.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-            // Update the most recent message to set its "read" attribute to true
-            if (formattedMessages.length > 0) {
-                const mostRecentMessage = formattedMessages[0];
-                const updateParams = {
-                    TableName: "sampleEmailTable2",
-                    Key: {
-                        ClientID: { S: "anay" },
-                        "ThreadID#MessageID": { S: `${threadId}#${mostRecentMessage.emailId}` },
-                    },
-                    UpdateExpression: "SET #read = :read",
-                    ExpressionAttributeNames: {
-                        "#read": "Read",
-                    },
-                    ExpressionAttributeValues: {
-                        ":read": { S: "true" },
-                    },
-                };
-
-                const updateCommand = new UpdateItemCommand(updateParams);
-                await client.send(updateCommand);
-                console.log(`Marked message ${mostRecentMessage.emailId} as read.`);
+                setMessages(formattedMessages);
+            } else {
+                const errorData = await response.json();
             }
-
-
-            setMessages(formattedMessages);
         } catch (err) {
             console.error("Error fetching conversation:", err);
             setError("Failed to load conversation.");

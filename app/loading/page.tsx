@@ -24,9 +24,10 @@ export default function LoadingPage() {
         const { access_token: token, user } = data.session;
 
         // Send session data to the middleman API
-        const response = await fetch('/api/send-supabase-package', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: "include",
           body: JSON.stringify({
             jwt: token,
             email: user.email,
