@@ -100,10 +100,10 @@ export default function LoginPage() {
     setMessage('');
 
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/loading`,
+          redirectTo: `${window.location.origin}/loading?source=login`, // Add source parameter
         },
       });
 
@@ -113,7 +113,7 @@ export default function LoginPage() {
         setMessage('Redirecting to Google...');
       }
     } catch (err) {
-      console.error(err);
+      console.error('Error during Google sign-in:', err);
       setMessage('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);

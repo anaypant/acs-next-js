@@ -22,7 +22,7 @@ export default function SignupPage() {
     const checkUser = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        router.push('/dashboard'); // Redirect if already logged in
+        router.push('/domain-selection'); // Redirect if already logged in
       }
     };
 
@@ -38,32 +38,34 @@ export default function SignupPage() {
     e.preventDefault();
     setMessage('');
     setIsLoading(true);
-  
+
     try {
       const { error, data } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
           data: {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
+            full_name: formData.firstName+" "+formData.lastName,
             company: formData.company,
             phone_number: formData.phoneNumber,
           },
-          emailRedirectTo: `${window.location.origin}/loading`, // Redirect to the loading page
-
+          emailRedirectTo: `${window.location.origin}/domain-selection`, // Redirect after email verification
         },
       });
-  
+
       if (error) {
-        setMessage(`Error: ${error.message}`);
+        if (error.message.includes('Email already exists')) {
+          setMessage('This email address is already registered. Please log in instead.');
+        } else {
+          setMessage(`Error: ${error.message}`);
+        }
       } else if (data.user && !data.user.email_confirmed_at) {
         setMessage(
-          `Signup successful! A verification email has been sent to ${formData.email}. Please verify your email to log in.`
+            `Signup successful! A verification email has been sent to ${formData.email}. Please verify your email to log in.`
         );
       } else {
         setMessage('Signup successful! Redirecting...');
-        router.push('/loading');
+        router.push('/domain-selection');
       }
     } catch (err) {
       console.error('Error during signup:', err);
@@ -73,15 +75,16 @@ export default function SignupPage() {
     }
   };
 
+
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     setMessage('');
 
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/loading`, // Redirect to the callback route
+          redirectTo: `${window.location.origin}/loading?source=signup`, // Add source parameter
         },
       });
 
@@ -98,85 +101,91 @@ export default function SignupPage() {
     }
   };
 
+
+
   return (
-    <motion.div
-      className="min-h-screen bg-[#1B1C28] text-gray-100 flex flex-col items-center justify-center px-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <motion.h1
-        className="text-4xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-[#8FA1D0] to-[#E94560]"
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-      >
-        Signup for ACS
-      </motion.h1>
-
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md space-y-6 bg-[#24253A] p-6 rounded-lg shadow-lg"
-      >
-        <p className="text-sm text-gray-400 mb-2">
-          <span className="text-red-500">*</span> Indicates required field
-        </p>
-
-        {[ // Form fields for first name, last name, email, and password
-          { id: 'firstName', label: 'First Name', required: true },
-          { id: 'lastName', label: 'Last Name', required: true },
-          { id: 'email', label: 'Email', type: 'email', required: true },
-          { id: 'password', label: 'Password', type: 'password', required: true },
-        ].map((field) => (
-          <div key={field.id}>
-            <label
-              htmlFor={field.id}
-              className="block text-sm font-medium text-gray-300"
-            >
-              {field.label} {field.required && <span className="text-red-500">*</span>}
-            </label>
-            <input
-              id={field.id}
-              name={field.id}
-              type={field.type || 'text'}
-              value={formData[field.id]}
-              onChange={handleChange}
-              required={field.required}
-              className="w-full p-3 bg-[#33354A] text-gray-100 rounded-md focus:ring-2 focus:ring-[#8FA1D0]"
-            />
-          </div>
-        ))}
-
-        <button
-          type="submit"
-          disabled={isLoading}
-          className={`w-full py-3 ${isLoading ? 'bg-[#8FA1D0]' : 'bg-[#4B5C99] hover:bg-[#5C6DAA]'} text-gray-100 font-bold rounded-md focus:outline-none`}
-        >
-          {isLoading ? 'Signing up...' : 'Signup'}
-        </button>
-      </form>
-
-      <div className="mt-6 w-full max-w-md">
-        <button
-          onClick={handleGoogleSignIn}
-          disabled={isLoading}
-          className={`w-full flex items-center justify-center py-3 px-4 ${isLoading ? 'bg-[#33354A]' : 'bg-black hover:bg-[#454766]'} text-white font-medium rounded-md shadow-md focus:outline-none`}
-        >
-          <img src="/google-icon.svg" alt="Google" className="w-5 h-5 mr-3" />
-          {isLoading ? 'Redirecting...' : 'Sign in with Google'}
-        </button>
-      </div>
-
-      {message && (
-        <motion.p
-          className="mt-4 text-center text-sm text-gray-400"
+      <motion.div
+          className="min-h-screen bg-[#1B1C28] text-gray-100 flex flex-col items-center justify-center px-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.5 }}
+      >
+        <motion.h1
+            className="text-4xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-[#8FA1D0] to-[#E94560]"
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
         >
-          {message}
-        </motion.p>
-      )}
-    </motion.div>
+          Signup for ACS
+        </motion.h1>
+
+        <form
+            onSubmit={handleSubmit}
+            className="w-full max-w-md space-y-6 bg-[#24253A] p-6 rounded-lg shadow-lg"
+        >
+          <p className="text-sm text-gray-400 mb-2">
+            <span className="text-red-500">*</span> Indicates required field
+          </p>
+
+          {[
+            { id: 'firstName', label: 'First Name', required: true },
+            { id: 'lastName', label: 'Last Name', required: true },
+            { id: 'email', label: 'Email', type: 'email', required: true },
+            { id: 'password', label: 'Password', type: 'password', required: true },
+          ].map((field) => (
+              <div key={field.id}>
+                <label
+                    htmlFor={field.id}
+                    className="block text-sm font-medium text-gray-300"
+                >
+                  {field.label} {field.required && <span className="text-red-500">*</span>}
+                </label>
+                <input
+                    id={field.id}
+                    name={field.id}
+                    type={field.type || 'text'}
+                    value={formData[field.id]}
+                    onChange={handleChange}
+                    required={field.required}
+                    className="w-full p-3 bg-[#33354A] text-gray-100 rounded-md focus:ring-2 focus:ring-[#8FA1D0]"
+                />
+              </div>
+          ))}
+
+          <button
+              type="submit"
+              disabled={isLoading}
+              className={`w-full py-3 ${
+                  isLoading ? 'bg-[#8FA1D0]' : 'bg-[#4B5C99] hover:bg-[#5C6DAA]'
+              } text-gray-100 font-bold rounded-md focus:outline-none`}
+          >
+            {isLoading ? 'Signing up...' : 'Signup'}
+          </button>
+        </form>
+
+        <div className="mt-6 w-full max-w-md">
+          <button
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+              className={`w-full flex items-center justify-center py-3 px-4 ${
+                  isLoading ? 'bg-[#33354A]' : 'bg-black hover:bg-[#454766]'
+              } text-white font-medium rounded-md shadow-md focus:outline-none`}
+          >
+            <img src="/google-icon.svg" alt="Google" className="w-5 h-5 mr-3" />
+            {isLoading ? 'Redirecting...' : 'Sign in with Google'}
+          </button>
+        </div>
+
+        {message && (
+            <motion.p
+                className="mt-4 text-center text-sm text-gray-400"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+            >
+              {message}
+            </motion.p>
+        )}
+      </motion.div>
   );
 }

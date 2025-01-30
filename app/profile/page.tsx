@@ -103,7 +103,7 @@ export default function ProfilePage() {
 
             if (session?.user) {
                 const { user } = session;
-                const domain = `${user.user_metadata?.name?.replace(' ', '_')}@automatedconsultancy.com`;
+                const domain = `${user.user_metadata?.name?.replace(' ', '_')}@homes.automatedconsultancy.com`;
                 setFormData({
                     name: user.user_metadata?.name || '',
                     email: user.email || '',

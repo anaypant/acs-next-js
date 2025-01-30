@@ -1,87 +1,68 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '../utils/supabase/supabase';
 
 export default function LoadingPage() {
-  const [message, setMessage] = useState('');
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const source = searchParams.get('source'); // Extract source parameter
 
   useEffect(() => {
-    const processSession = async () => {
-      setMessage('Processing your login...');
+    const validateAndProcessDomain = async () => {
       try {
-        // Retrieve Supabase session
         const { data, error } = await supabase.auth.getSession();
 
         if (error || !data.session) {
-          console.error('Error retrieving session:', error);
-          setMessage('Error: Unable to retrieve session.');
+          console.error('Error validating session:', error);
+          router.push('/signup'); // Redirect back to signup if session validation fails
           return;
         }
 
         const { access_token: token, user } = data.session;
 
-        // Send session data to the middleman API
+        // Generate default domain
+        const defaultDomain = `${user.user_metadata.full_name.replace(' ', '_')}@homes.automatedconsultancy.com`;
+
+        // Send default domain to backend
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: "include",
+          credentials: 'include',
           body: JSON.stringify({
             jwt: token,
             email: user.email,
             uid: user.id,
+            responseEmail: defaultDomain,
           }),
         });
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('Error calling middleman API:', errorText);
-          setMessage('Error: Unable to process your login.');
+          console.error('Error processing domain:', errorText);
+          router.push('/signup'); // Redirect to signup if domain processing fails
           return;
         }
 
-        setMessage('Login successful! Redirecting...');
-        router.push('/dashboard'); // Redirect to the dashboard
+        // Redirect to the appropriate page
+        if (source === 'signup') {
+          router.push(`/welcome?domain=${defaultDomain}`); // Pass domain to welcome page
+        } else {
+          router.push('/dashboard'); // Skip welcome page for login
+        }
       } catch (err) {
         console.error('Unexpected error:', err);
-        setMessage('An unexpected error occurred. Please try again.');
+        router.push('/signup'); // Redirect back to signup in case of errors
       }
     };
 
-    processSession();
-  }, [router]);
+    validateAndProcessDomain();
+  }, [router, source]);
 
   return (
-    <div className="min-h-screen bg-[#1B1C28] text-gray-100 flex flex-col items-center justify-center">
-      {/* Loading Animation */}
-      <div className="flex items-center justify-center mb-6">
-        <div className="loader"></div>
+      <div className="min-h-screen bg-[#1B1C28] text-gray-100 flex items-center justify-center">
+        <h1 className="text-lg font-bold">Processing your account...</h1>
       </div>
-
-      {/* Message */}
-      <p className="text-lg">{message}</p>
-
-      <style jsx>{`
-        .loader {
-          border: 6px solid rgba(255, 255, 255, 0.2);
-          border-top: 6px solid #8FA1D0;
-          border-radius: 50%;
-          width: 50px;
-          height: 50px;
-          animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-          0% {
-            transform: rotate(0deg);
-          }
-          100% {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
-    </div>
   );
 }
