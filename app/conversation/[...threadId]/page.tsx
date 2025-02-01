@@ -1,11 +1,10 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { DynamoDBClient, QueryCommand, PutItemCommand } from '@aws-sdk/client-dynamodb';
+import {QueryCommand, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import dynamoDBClient from "@/app/utils/aws/dynamodb";
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
-import {UpdateItemCommand} from "@aws-sdk/client-dynamodb";
 
 interface Message {
     emailId: string;
@@ -39,7 +38,7 @@ export default function ConversationPage() {
         setRandomScore(Math.floor(Math.random() * 100) + 1); // Generate random score on client
     }, []);
 
-    const fetchConversation = async () => {
+    const fetchConversation = useCallback(async () => {
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/threads/${threadId}`, {
                 headers: {
@@ -47,7 +46,7 @@ export default function ConversationPage() {
                 },
                 credentials: 'include', // Ensures cookies are saved
             });
-        
+    
             if (response.ok) {
                 const responseData = await response.json();
                 console.log(responseData);
@@ -65,10 +64,10 @@ export default function ConversationPage() {
                         read: item.read || "",
                     };
                 });
-
+    
                 setMessages(formattedMessages);
             } else {
-                const errorData = await response.json();
+                await response.json();
             }
         } catch (err) {
             console.error("Error fetching conversation:", err);
@@ -76,13 +75,13 @@ export default function ConversationPage() {
         } finally {
             setLoading(false);
         }
-    };
-
+    }, [threadId]); // Include threadId as a dependency
+    
     useEffect(() => {
         if (!threadId) return;
         fetchConversation();
-    }, [threadId]);
-
+    }, [threadId, fetchConversation]); // Include fetchConversation to avoid warning
+    
     if (!isMounted) {
         return null; // Avoid mismatches by not rendering until mounted
     }
@@ -119,6 +118,7 @@ export default function ConversationPage() {
             const messageIds = items.map((item) => {
                 const compositeKey = item["ThreadID#MessageID"]?.S || "";
                 const [_, messageId] = compositeKey.split("#");
+                console.log(_);
                 return parseInt(messageId, 10);
             });
 

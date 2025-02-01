@@ -28,6 +28,7 @@ export default function ContactsPage() {
             company: 'Tech Solutions',
         },
     ]);
+    setContacts(contacts);
 
     return (
         <div className="h-screen bg-gradient-to-br from-blue-900 via-gray-900 to-gray-800 text-white font-sans">

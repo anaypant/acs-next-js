@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { fetchEmailsFromDynamoDB } from '../utils/aws/functions';
+import { fetchThreadsFromDynamoDB } from '../utils/aws/functions';
 import { supabase } from '../utils/supabase/supabase';
 import { FaHome, FaDraftingCompass, FaUserFriends, FaEnvelope, FaCreditCard, FaCog } from 'react-icons/fa';
 
@@ -56,7 +56,7 @@ export default function DashboardPage() {
                     ":clientId": { S: clientId },
                 };
 
-                const emails = await fetchEmailsFromDynamoDB(
+                const emails = await fetchThreadsFromDynamoDB(
                     tableName,
                     keyConditionExpression,
                     expressionAttributeValues,
