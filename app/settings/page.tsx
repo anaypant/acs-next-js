@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createServerClient } from '../utils/supabase/server';
+import { supabase } from '../utils/supabase/supabase';
 
 export default function SettingsPage() {
   const [email, setEmail] = useState('');
@@ -14,7 +14,6 @@ export default function SettingsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
 
-  const supabase = createServerClient();
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -81,7 +80,7 @@ export default function SettingsPage() {
     setError(null);
   
     try {
-      // Fetch the current session before signing out
+      // Fetch the current session before sending the delete request
       const { data, error } = await supabase.auth.getSession();
   
       if (error || !data.session?.user) {
@@ -91,26 +90,19 @@ export default function SettingsPage() {
       // Store session details
       const sessionDetails = {
         jwt: data.session.access_token,
-        email: data.session.user.email,
         uid: data.session.user.id,
       };
   
-      // Sign out from Supabase to clear session
-      const { error: signOutError } = await supabase.auth.signOut();
-      if (signOutError) {
-        throw new Error('Failed to sign out of Supabase.');
-      }
-  
-      // Send a request to AWS to delete the user account
-      const response = await fetch('/api/users/delete', {
-        method: 'POST',
+      // Call the API route to delete the account
+      const response = await fetch('/api/supabase/delete-user', {
+        method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(sessionDetails),
       });
   
       if (!response.ok) {
         const result = await response.json();
-        throw new Error(result.error || 'Failed to delete account on AWS.');
+        throw new Error(result.error || 'Failed to delete account.');
       }
   
       setSuccess('Your account has been deleted successfully.');
@@ -122,7 +114,7 @@ export default function SettingsPage() {
       setIsDeleting(false);
     }
   };
-  
+    
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {

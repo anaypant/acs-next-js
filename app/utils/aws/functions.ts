@@ -29,7 +29,7 @@ export const fetchThreadsFromDynamoDB = async (
     indexName?: string
 ): Promise<Thread[]> => {
     try {
-        const url = `${process.env.API_URL}/users/all-threads`;
+        const url = `${process.env.NEXT_PUBLIC_API_URL}/users/all-threads`;
         console.log(url);
         const res = await fetch(url, { credentials: 'include' });
         const data = await res.json();
