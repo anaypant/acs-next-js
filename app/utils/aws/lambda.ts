@@ -2,10 +2,10 @@ import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 
 // Initialize AWS Lambda client
 const lambdaClient = new LambdaClient({
-    region: process.env.NEXT_PUBLIC_AWS_REGION, // Replace with your region
+    region: process.env.AWS_REGION, // Replace with your region
     credentials: {
-        accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY || '',
-        secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET || '',
+        accessKeyId: process.env.AWS_ACCESS_KEY || '',
+        secretAccessKey: process.env.AWS_SECRET || '',
     },
 });
 

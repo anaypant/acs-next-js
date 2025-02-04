@@ -5,6 +5,8 @@ import {QueryCommand, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import dynamoDBClient from "@/app/utils/aws/dynamodb";
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
+import { useCallback } from 'react';
+
 
 interface Message {
     emailId: string;
@@ -16,7 +18,8 @@ interface Message {
 }
 
 export default function ConversationPage() {
-    const  threadId  = useParams().threadId[0];
+    const params = useParams();
+    const threadId = params.threadId ? params.threadId[0] : '';
     const [isMounted, setIsMounted] = useState(false); // Ensure hydration consistency
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(true);
@@ -50,10 +53,20 @@ export default function ConversationPage() {
             if (response.ok) {
                 const responseData = await response.json();
                 console.log(responseData);
-                const formattedMessages: Message[] = responseData.map((item) => {
+                interface ResponseDataItem {
+                    response_id: string;
+                    timestamp: string;
+                    from: string;
+                    to: string;
+                    subject: string;
+                    body: string;
+                    read: string;
+                }
+
+                const formattedMessages: Message[] = (responseData as ResponseDataItem[]).map((item: ResponseDataItem) => {
                     const compositeKey = item["response_id"] || "";
-                    const [_, messageId] = compositeKey.split("#");
-    
+                    const [, messageId] = compositeKey.split("#");
+
                     return {
                         emailId: messageId || "",
                         timestamp: item.timestamp || "",
@@ -61,7 +74,6 @@ export default function ConversationPage() {
                         to: item.to || "",
                         subject: item.subject || "",
                         body: item.body || "",
-                        read: item.read || "",
                     };
                 });
     
@@ -261,3 +273,4 @@ export default function ConversationPage() {
         </div>
     );
 }
+

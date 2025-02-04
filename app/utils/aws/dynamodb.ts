@@ -15,10 +15,10 @@ function dynamoDBClient() {
 
 
   return new DynamoDBClient({
-    region: process.env.NEXT_PUBLIC_AWS_REGION as string,
+    region: process.env.AWS_REGION as string,
     credentials: {
-      accessKeyId: process.env.NEXT_PUBLIC_AWS_ACCESS_KEY as string,
-      secretAccessKey: process.env.NEXT_PUBLIC_AWS_SECRET as string,
+      accessKeyId: process.env.AWS_ACCESS_KEY as string,
+      secretAccessKey: process.env.AWS_SECRET as string,
     },
   });
 }

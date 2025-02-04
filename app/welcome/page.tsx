@@ -1,8 +1,9 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
-export default function WelcomePage() {
+function WelcomeContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const domain = searchParams.get('domain'); // Get the domain name from query params
@@ -13,7 +14,7 @@ export default function WelcomePage() {
                 Welcome to ACS!
             </h1>
             <p className="text-lg text-gray-300 mb-6">
-                Your domain name is: <span className="font-bold text-white">{domain}</span>
+                Your domain name is: <span className="font-bold text-white">{domain || 'N/A'}</span>
             </p>
             <button
                 onClick={() => router.push('/dashboard')}
@@ -22,5 +23,13 @@ export default function WelcomePage() {
                 Go to Dashboard
             </button>
         </div>
+    );
+}
+
+export default function WelcomePage() {
+    return (
+        <Suspense fallback={<p className="text-white text-center">Loading...</p>}>
+            <WelcomeContent />
+        </Suspense>
     );
 }

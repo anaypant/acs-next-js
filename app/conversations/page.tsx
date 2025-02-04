@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { fetchEmailsFromDynamoDB } from '../utils/aws/functions';
+import { fetchThreadsFromDynamoDB } from '../utils/aws/functions';
 import { supabase } from '../utils/supabase/supabase';
 
 interface Email {
@@ -53,7 +53,7 @@ export default function ConversationsPage() {
                 };
 
                 console.log("Fetching conversations for clientId:", clientId);
-                const emails = await fetchEmailsFromDynamoDB(
+                const emails = await fetchThreadsFromDynamoDB(
                     tableName,
                     keyConditionExpression,
                     expressionAttributeValues,

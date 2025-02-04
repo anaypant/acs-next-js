@@ -6,8 +6,18 @@ import { supabase } from '../utils/supabase/supabase';
 import { FaUserCircle } from 'react-icons/fa';
 import { FiSearch } from 'react-icons/fi';
 
+
+type CustomUser = {
+    id: string;
+    email: string;
+    name?: string;
+  };
+    
+
 export default function Navbar() {
-    const [user, setUser] = useState(null);
+
+
+    const [user, setUser] = useState<CustomUser | null>(null);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -18,18 +28,11 @@ export default function Navbar() {
             const {
                 data: { session },
             } = await supabase.auth.getSession();
-            setUser(session?.user ?? null);
+            setUser(session?.user as CustomUser | null);
         };
 
         fetchUser();
 
-        const { subscription } = supabase.auth.onAuthStateChange((_, session) => {
-            setUser(session?.user ?? null);
-        });
-
-        return () => {
-            subscription?.unsubscribe();
-        };
     }, []);
 
     const handleSignOut = async () => {
@@ -38,14 +41,14 @@ export default function Navbar() {
         router.push('/'); // Redirect to home after sign out
     };
 
-    const handleSearch = (e) => {
+    const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (searchQuery.trim()) {
             router.push(`/search?query=${searchQuery.trim()}`);
         }
     };
 
-    const navigateTo = (path) => {
+    const navigateTo = (path: string) => {
         router.push(path);
         setDropdownOpen(false); // Close dropdown menu
     };
