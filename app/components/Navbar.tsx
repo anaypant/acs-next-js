@@ -6,41 +6,42 @@ import { supabase } from '../utils/supabase/supabase';
 import { FaUserCircle } from 'react-icons/fa';
 
 export default function Navbar() {
+    // State management
     const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
     const [dropdownOpen, setDropdownOpen] = useState(false);
-    const dropdownRef = useRef(null);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
+    // Fetch user session on mount
     useEffect(() => {
         const fetchUser = async () => {
-            const {
-                data: { session },
-            } = await supabase.auth.getSession();
-            setUser(session?.user ?? null);
+            try {
+                setLoading(true);
+                const { data: { session } } = await supabase.auth.getSession();
+                setUser(session?.user ?? null);
+            } catch (error) {
+                console.error("Error fetching user:", error);
+            } finally {
+                setLoading(false);
+            }
         };
 
         fetchUser();
 
-        // Listen for auth state changes
-        const { subscription } = supabase.auth.onAuthStateChange((_, session) => {
+        // Subscribe to auth state changes
+        const { data: subscription } = supabase.auth.onAuthStateChange((_, session) => {
             setUser(session?.user ?? null);
         });
 
         return () => {
-            if (subscription) {
-                subscription.unsubscribe();
-            }
+            subscription?.subscription?.unsubscribe();
         };
     }, []);
 
-    const handleSignOut = async () => {
-        await supabase.auth.signOut();
-        setUser(null);
-    };
-
     // Close dropdown when clicking outside
     useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setDropdownOpen(false);
             }
         };
@@ -49,6 +50,12 @@ export default function Navbar() {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
+
+    // Sign out user
+    const handleSignOut = async () => {
+        await supabase.auth.signOut();
+        setUser(null);
+    };
 
     return (
         <header className="w-full py-4 bg-[#1B1C28] shadow-md">
@@ -77,7 +84,6 @@ export default function Navbar() {
                             Contact
                         </Link>
                     </li>
-                    {/* Show API Link only if user is signed in */}
                     {user && (
                         <li>
                             <Link href="/dashboard" className="hover:text-[#8FA1D0]">
@@ -87,10 +93,9 @@ export default function Navbar() {
                     )}
                 </ul>
 
-                {/* Authentication Buttons or User Dropdown */}
+                {/* Authentication or User Dropdown */}
                 <div className="flex space-x-4">
                     {!user ? (
-                        // Show Login and Signup buttons if not signed in
                         <>
                             <Link
                                 href="/login"
@@ -106,7 +111,6 @@ export default function Navbar() {
                             </Link>
                         </>
                     ) : (
-                        // Show User Icon and Dropdown if signed in
                         <div ref={dropdownRef} className="relative">
                             <button
                                 onClick={() => setDropdownOpen((prev) => !prev)}
