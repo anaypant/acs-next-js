@@ -19,9 +19,18 @@ interface Email {
     type: string;
 }
 
+interface ThreadSummary {
+    conversationId: string;
+    clientName: string;
+    latestSubject: string;
+    latestMessage: string;
+    latestTimestamp: string;
+    sender: string;
+}
+
 export default function DashboardPage() {
     const [clientId, setClientId] = useState<string | null>(null);
-    const [threads, setThreads] = useState<Email[]>([]);
+    const [threads, setThreads] = useState<ThreadSummary[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
@@ -50,20 +59,35 @@ export default function DashboardPage() {
             try {
                 setLoading(true);
 
-                const tableName = "Conversations";
-                const keyConditionExpression = "associated_account = :clientId";
-                const expressionAttributeValues = {
-                    ":clientId": { S: clientId },
-                };
+                const emailsGrouped = await fetchThreadsFromDynamoDB();
+                console.log(emailsGrouped);
 
-                const emails = await fetchThreadsFromDynamoDB(
-                    tableName,
-                    keyConditionExpression,
-                    expressionAttributeValues,
-                    "associated_account-is_first_email-index"
-                );
-                console.log("Fetched emails:", emails);
-                setThreads(emails);
+                const threadSummaries: ThreadSummary[] = Object.keys(emailsGrouped).map((conversationId) => {
+                    const emails = emailsGrouped[conversationId];
+
+                    if (emails.length === 0) return null;
+
+                    // Sort emails within the thread by timestamp (latest first)
+                    emails.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+                    const latestEmail = emails[0];
+                    // get earliest email
+                    const earliestEmail = emails[emails.length - 1];
+
+                    return {
+                        conversationId,
+                        clientName: earliestEmail.sender || "Unknown",
+                        latestSubject: latestEmail.subject || "No Subject",
+                        latestMessage: latestEmail.body.substring(0, 100) + "...", // Preview of the body
+                        latestTimestamp: latestEmail.timestamp,
+                        sender: latestEmail.sender,
+                    };
+                }).filter(Boolean); // Remove null values
+
+                // Sort threads by most recent email timestamp
+                threadSummaries.sort((a, b) => new Date(b.latestTimestamp).getTime() - new Date(a.latestTimestamp).getTime());
+
+                setThreads(threadSummaries);
             } catch (err) {
                 console.error("Error fetching emails:", err);
                 setError("Failed to load emails. Please try again later.");
@@ -79,45 +103,18 @@ export default function DashboardPage() {
         router.push(`/conversation/${conversationId}`);
     };
 
-    const totalConversations = threads.length;
-    const unreadConversations = threads.filter((thread) => thread.type === "unread").length;
-
     return (
         <div className="flex h-screen bg-gradient-to-br from-blue-900 via-gray-900 to-gray-800 text-white font-sans">
             {/* Sidebar */}
             <aside className="w-64 bg-gradient-to-b from-gray-900 to-gray-800 p-6 flex flex-col shadow-lg">
                 <h2 className="text-3xl font-bold mb-8 tracking-wide text-center">Dashboard</h2>
                 <nav className="flex flex-col space-y-4">
-                    <SidebarLink
-                        icon={<FaHome />}
-                        label="Overview"
-                        onClick={() => router.push('/dashboard')}
-                    />
-                    <SidebarLink
-                        icon={<FaDraftingCompass />}
-                        label="Drafts"
-                        onClick={() => router.push('/drafts')}
-                    />
-                    <SidebarLink
-                        icon={<FaUserFriends />}
-                        label="Contacts"
-                        onClick={() => router.push('/contacts')}
-                    />
-                    <SidebarLink
-                        icon={<FaEnvelope />}
-                        label="Conversations"
-                        onClick={() => router.push('/conversations')}
-                    />
-                    <SidebarLink
-                        icon={<FaCreditCard />}
-                        label="Billing"
-                        onClick={() => router.push('/billing')}
-                    />
-                    <SidebarLink
-                        icon={<FaCog />}
-                        label="Settings"
-                        onClick={() => router.push('/settings')}
-                    />
+                    <SidebarLink icon={<FaHome />} label="Overview" onClick={() => router.push('/dashboard')} />
+                    <SidebarLink icon={<FaDraftingCompass />} label="Drafts" onClick={() => router.push('/drafts')} />
+                    <SidebarLink icon={<FaUserFriends />} label="Contacts" onClick={() => router.push('/contacts')} />
+                    <SidebarLink icon={<FaEnvelope />} label="Conversations" onClick={() => router.push('/conversations')} />
+                    <SidebarLink icon={<FaCreditCard />} label="Billing" onClick={() => router.push('/billing')} />
+                    <SidebarLink icon={<FaCog />} label="Settings" onClick={() => router.push('/settings')} />
                 </nav>
             </aside>
 
@@ -135,8 +132,7 @@ export default function DashboardPage() {
 
                 {/* Dashboard Widgets */}
                 <div className="p-6 grid grid-cols-2 gap-6">
-                    <DashboardWidget title="Total Conversations" value={totalConversations} />
-                    <DashboardWidget title="Unread Conversations" value={unreadConversations} />
+                    <DashboardWidget title="Total Threads" value={threads.length} />
                 </div>
 
                 {/* Email Threads */}
@@ -153,9 +149,11 @@ export default function DashboardPage() {
                                     className="p-6 bg-gray-800 rounded-lg shadow-lg cursor-pointer hover:bg-gray-700 transition-all"
                                     onClick={() => handleThreadClick(thread.conversationId)}
                                 >
-                                    <h3 className="text-lg font-bold text-blue-300">{thread.subject}</h3>
-                                    <p className="text-gray-400 mt-1">{thread.sender}</p>
-                                    <p className="text-gray-500 text-sm mt-2">{new Date(thread.timestamp).toLocaleString()}</p>
+                                    <h3 className="text-lg font-bold text-blue-300">{thread.latestSubject}</h3>
+                                    <p className="text-gray-400 mt-1">Client: {thread.clientName}</p>
+                                    <p className="text-gray-400 mt-1">From: {thread.sender}</p>
+                                    <p className="text-gray-500 text-sm mt-2">{thread.latestMessage}</p>
+                                    <p className="text-gray-500 text-xs mt-2">{new Date(thread.latestTimestamp).toLocaleString()}</p>
                                 </div>
                             ))}
                         </div>
