@@ -1,8 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import {QueryCommand, PutItemCommand } from '@aws-sdk/client-dynamodb';
-import dynamoDBClient from "@/app/utils/aws/dynamodb";
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { useCallback } from 'react';
@@ -104,73 +102,8 @@ export default function ConversationPage() {
     };
 
     const handleSendResponse = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        const client = dynamoDBClient();
-        let newMessageId = 1;
-        const timestamp = new Date().toISOString();
-
-        try {
-            const queryParams = {
-                TableName: "sampleEmailTable2",
-                KeyConditionExpression: "ClientID = :clientId AND begins_with(#sortKey, :threadId)",
-                ExpressionAttributeNames: {
-                    "#sortKey": "ThreadID#MessageID",
-                },
-                ExpressionAttributeValues: {
-                    ":clientId": { S: "anay" },
-                    ":threadId": { S: threadId[0] },
-                },
-            };
-
-            const queryCommand = new QueryCommand(queryParams);
-            const queryResponse = await client.send(queryCommand);
-
-            const items = queryResponse.Items || [];
-            const messageIds = items.map((item) => {
-                const compositeKey = item["ThreadID#MessageID"]?.S || "";
-                const [_, messageId] = compositeKey.split("#");
-                console.log(_);
-                return parseInt(messageId, 10);
-            });
-
-            if (messageIds.length > 0) {
-                newMessageId = Math.max(...messageIds) + 1;
-            }
-
-            const newCompositeKey = `${threadId[0]}#${String(newMessageId).padStart(3, "0")}`;
-
-            const putParams = {
-                TableName: "sampleEmailTable2",
-                Item: {
-                    ClientID: { S: "anay" },
-                    "ThreadID#MessageID": { S: newCompositeKey },
-                    Timestamp: { S: timestamp },
-                    From: { S: "anaypant212@gmail.com" },
-                    To: { S: response.to },
-                    Subject: { S: response.subject },
-                    Body: { S: response.body },
-                },
-            };
-
-            const putCommand = new PutItemCommand(putParams);
-            await client.send(putCommand);
-            alert("Response sent successfully!");
-
-            setResponse({
-                to: "",
-                subject: "",
-                body: "",
-            });
-
-            fetchConversation();
-            setIsFormVisible(false);
-        } catch (err) {
-            console.error("Error sending response:", err);
-            alert("Failed to send response.");
-        }
+        console.log("Sending response:", response);
     };
-
 
     return (
         <div className="flex flex-col h-screen bg-gray-900 text-gray-100 overflow-hidden">

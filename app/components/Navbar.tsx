@@ -12,6 +12,9 @@ export default function Navbar() {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
+    // Check environment
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+
     // Fetch user session on mount
     useEffect(() => {
         const fetchUser = async () => {
@@ -58,8 +61,15 @@ export default function Navbar() {
     };
 
     return (
-        <header className="w-full py-4 bg-[#1B1C28] shadow-md">
-            <nav className="container mx-auto flex justify-between items-center px-6 md:px-12">
+        <header className="w-full py-4 bg-[#1B1C28] shadow-md relative">
+            {/* Dev Mode Banner */}
+            {isDevelopment && (
+                <div className="absolute top-0 left-0 w-full bg-red-600 text-white text-center text-sm py-1">
+                    ⚠️ Development Mode - Some features may not work as expected.
+                </div>
+            )}
+
+            <nav className="container mx-auto flex justify-between items-center px-6 md:px-12 mt-2">
                 {/* Logo */}
                 <div className="text-2xl font-bold text-gray-100">
                     <Link href="/" className="hover:text-[#8FA1D0]">

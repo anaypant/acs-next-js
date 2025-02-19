@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import {supabase} from "@/app/utils/supabase/supabase";
 import {invokeLambda} from "@/app/utils/aws/lambda";
 import {createServerClient} from "@/app/utils/supabase/server";
 
