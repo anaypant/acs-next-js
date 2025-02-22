@@ -301,210 +301,259 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import Navbar from './components/Navbar'; // or your correct path
-import Footer from './components/Footer'; // or your correct path
-import { Box, Typography, Button, Container, Grid, Card, CardContent, TextField } from '@mui/material';
+import Navbar from './components/Navbar'; // Adjust path if needed
+import Footer from './components/Footer'; // Adjust path if needed
+import {
+  Box,
+  Typography,
+  Button,
+  Container,
+  Grid,
+  TextField,
+} from '@mui/material';
 
-/**
- * Redesigned Landing Page
- * - Keeps original supabase functionality, placeholders, feature array, etc.
- * - Adds a green grid-like background, a new hero layout, and an accordion-style feature list to match the screenshot's style.
- */
 export default function LandingPage() {
-    const [searchPlaceholder, setSearchPlaceholder] = useState('');
-    const [isVisible, setIsVisible] = useState(true);
+  // -------------------------------
+  // 1) Rotating placeholder logic
+  // -------------------------------
+  const [searchPlaceholder, setSearchPlaceholder] = useState('');
+  const [isVisible, setIsVisible] = useState(true);
 
-    const searchSuggestions = [
-        'AI tools for real estate',
-        'Streamline your workflow',
-        'Predictive analytics',
-        'Effortless communication',
-        'Seamless CRM integrations',
-    ];
+  const searchSuggestions = [
+    'AI tools for real estate',
+    // "Streamline your workflow", 
+    // ^^^^ Temporarily commented out: This suggestion was originally used to indicate enhancing workflow efficiency.
+    'Predictive analytics',
+    'Effortless communication',
+    'Seamless CRM integrations',
+  ];
 
-    let suggestionIndex = 0;
+  let suggestionIndex = 0;
 
-    useEffect(() => {
-        const cyclePlaceholders = () => {
-            setIsVisible(false); // fade-out
-            setTimeout(() => {
-                setSearchPlaceholder(searchSuggestions[suggestionIndex]);
-                suggestionIndex = (suggestionIndex + 1) % searchSuggestions.length;
-                setIsVisible(true); // fade-in
-            }, 500);
-        };
+  useEffect(() => {
+    const cyclePlaceholders = () => {
+      setIsVisible(false);
+      setTimeout(() => {
+        // setSearchPlaceholder(searchSuggestions[suggestionIndex]);
+        // suggestionIndex = (suggestionIndex + 1) % searchSuggestions.length;
+        // setIsVisible(true);
+      }, 500);
+    };
 
-        const interval = setInterval(cyclePlaceholders, 2500);
-        return () => clearInterval(interval);
-    }, []);
+    const interval = setInterval(cyclePlaceholders, 2500);
+    return () => clearInterval(interval);
+  }, []);
 
-    return (
-        <Box
-            sx={{
-                minHeight: '100vh',
-                backgroundColor: '#F9FCF9',
-                color: '#2A2A2A',
-                // A subtle grid background to mimic the screenshot
-                backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.03) 1px, transparent 1px)',
-                backgroundSize: '40px 40px',
-            }}
-        >
-            {/* Top Navbar */}
-            <Navbar />
+  return (
+    <Box
+      sx={{
+        minHeight: '100vh',
+        // Grid-like background
+        backgroundColor: '#FFFFFF',
+        backgroundImage:
+          'radial-gradient(circle, rgba(0,0,0,0.04) 1px, transparent 1px)',
+        backgroundSize: '40px 40px',
+        color: '#2A2A2A',
+      }}
+    >
+      {/* Top Navbar */}
+      <Navbar />
 
-            {/* Hero Section */}
-            <Box
-                sx={{
-                    pt: 8,
-                    pb: 6,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    position: 'relative',
-                    overflow: 'hidden',
-                }}
+      {/* Hero Section */}
+      <Container sx={{ py: { xs: 6, md: 10 } }}>
+        <Grid container spacing={4} alignItems="center">
+          {/* LEFT COLUMN: Title, button, search bar, bullet points */}
+          <Grid item xs={12} md={6}>
+            {/* Title */}
+            <motion.div
+              initial={{ opacity: 0, y: -50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1 }}
             >
-                <motion.div
-                    initial={{ opacity: 0, y: -50 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1 }}
-                >
-                    <Typography
-                        variant="h3"
-                        fontWeight="bold"
-                        sx={{
-                            mb: 3,
-                            fontSize: { xs: '2rem', md: '3rem' },
-                            color: '#1E1E1E',
-                        }}
-                    >
-                        Empowering Realtors with AI
-                    </Typography>
-                </motion.div>
+              <Typography
+                variant="h3"
+                fontWeight="bold"
+                sx={{
+                  mb: 2,
+                  fontSize: { xs: '2rem', md: '3rem' },
+                  color: '#0E6537',
+                }}
+              >
+                Empowering Realtors with AI
+              </Typography>
+            </motion.div>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 50 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1, delay: 0.5 }}
-                >
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            mb: 4,
-                            maxWidth: '600px',
-                            mx: 'auto',
-                            color: '#4E4E4E',
-                        }}
-                    >
-                        Leverage AI to generate real-time business solutions and make informed decisions faster than ever.
-                    </Typography>
-                </motion.div>
+            {/* "Get Started" Button */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, delay: 0.6 }}
+            >
+              <Button
+                variant="contained"
+                sx={{
+                  mb: 4,
+                  px: 4,
+                  py: 1.5,
+                  fontWeight: 'bold',
+                  borderRadius: '8px',
+                  color: '#fff',
+                  backgroundColor: '#2E7D32',
+                  boxShadow: '0 4px 15px rgba(46, 125, 50, 0.3)',
+                  '&:hover': {
+                    backgroundColor: '#1B5E20',
+                  },
+                }}
+              >
+                Get Started
+              </Button>
+            </motion.div>
 
-                {/* "Get Started" Button */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 1, delay: 1 }}
+            {/* Rotating Placeholder Search Bar */}
+            {/* <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isVisible ? 1 : 0 }}
+              transition={{ duration: 0.5 }}
+              style={{ marginBottom: '2rem' }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  backgroundColor: '#F3F4F6',
+                  boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)',
+                  maxWidth: '400px',
+                  mb: 2,
+                }}
+              >
+                <TextField
+                  variant="standard"
+                  placeholder={searchPlaceholder}
+                  InputProps={{
+                    disableUnderline: true,
+                    sx: {
+                      px: 2,
+                      py: 1,
+                    },
+                  }}
+                  sx={{
+                    flex: 1,
+                    background: 'transparent',
+                    '& input': {
+                      color: '#333',
+                      textAlign: 'left',
+                    },
+                  }}
+                />
+                <Button
+                  variant="contained"
+                  sx={{
+                    borderRadius: 0,
+                    backgroundColor: '#0E6537',
+                    color: '#fff',
+                    fontWeight: 'bold',
+                    '&:hover': {
+                      backgroundColor: '#0B4C2A',
+                    },
+                  }}
                 >
-                    <Button
-                        variant="contained"
-                        sx={{
-                            px: 4,
-                            py: 1.5,
-                            fontWeight: 'bold',
-                            borderRadius: '8px',
-                            color: '#fff',
-                            backgroundColor: '#2E7D32',
-                            boxShadow: '0 4px 15px rgba(46, 125, 50, 0.3)',
-                            '&:hover': {
-                                backgroundColor: '#1B5E20',
-                            },
-                        }}
-                    >
-                        Get Started
-                    </Button>
-                </motion.div>
+                  Search
+                </Button>
+              </Box>
+            </motion.div> */}
 
-                {/* Example phone/dashboard images could be placed here if desired */}
+            {/* Feature List */}
+            <Box>
+              {[
+                'Pricing Prediction',
+                'Virtual Staging',
+                'Marketing Optimization',
+                'Automated Lead Scoring',
+                'Lorem Ipsum',
+              ].map((item, idx) => (
+                <Box
+                  key={idx}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    p: 2,
+                    borderRadius: 1,
+                    backgroundColor: '#F8FAF8',
+                    border: '1px solid #E0E0E0',
+                    mb: 1.5,
+                  }}
+                >
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight="bold"
+                    sx={{ color: '#0E6537' }}
+                  >
+                    {item}
+                  </Typography>
+                  <Typography variant="subtitle1" sx={{ color: '#0E6537' }}>
+                    +
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </Grid>
+
+          {/* RIGHT COLUMN: Subtext above images and Phone Images */}
+          <Grid item xs={12} md={6}>
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
+              {/* Subtext in slight green color */}
+              <Typography variant="h6" sx={{ color: '#388E3C' }}>
+                Leverage AI to generate real-time business solutions and make
+                informed decisions faster than ever.
+              </Typography>
             </Box>
 
-            {/* Features Section (Accordion-like design) */}
-            <Container sx={{ pb: 8 }}>
-                <Grid container spacing={4}>
-                    <Grid item xs={12} md={6}>
-                        <Typography
-                            variant="h4"
-                            fontWeight="bold"
-                            sx={{ mb: 4, color: '#2E7D32' }}
-                        >
-                            Pricing Prediction
-                        </Typography>
-                        <Typography variant="body1" sx={{ mb: 2 }}>
-                            Utilize AI to forecast property prices based on market trends, location, and other crucial factors.
-                        </Typography>
+            <Box sx={{ position: 'relative', textAlign: 'center' }}>
+              {/* First phone image */}
+              <Box
+                component="img"
+                src="/images/phone-1.png"
+                alt="Dashboard example 1"
+                sx={{
+                  width: '220px',
+                  height: 'auto',
+                  position: 'absolute',
+                  top: '20%',
+                  left: '50%',
+                  transform: 'translate(-110%, -10%)',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+                  borderRadius: '20px',
+                }}
+              />
+              {/* Second phone image */}
+              <Box
+                component="img"
+                src="/images/phone-2.png"
+                alt="Dashboard example 2"
+                sx={{
+                  width: '220px',
+                  height: 'auto',
+                  position: 'absolute',
+                  top: '10%',
+                  left: '50%',
+                  transform: 'translate(10%, 30%)',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+                  borderRadius: '20px',
+                }}
+              />
+              {/* Invisible spacer to push container height */}
+              <Box sx={{ height: '450px' }} />
+            </Box>
+          </Grid>
+        </Grid>
+      </Container>
 
-                        <Typography
-                            variant="h4"
-                            fontWeight="bold"
-                            sx={{ mb: 4, color: '#2E7D32' }}
-                        >
-                            Virtual Staging
-                        </Typography>
-                        <Typography variant="body1" sx={{ mb: 2 }}>
-                            Transform empty properties into beautifully staged homes with AI-powered virtual staging tools.
-                        </Typography>
-
-                        <Typography
-                            variant="h4"
-                            fontWeight="bold"
-                            sx={{ mb: 4, color: '#2E7D32' }}
-                        >
-                            Marketing Optimization
-                        </Typography>
-                        <Typography variant="body1">
-                            Identify the best marketing channels and campaigns with real-time analytics and predictive insights.
-                        </Typography>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                        <Typography
-                            variant="h4"
-                            fontWeight="bold"
-                            sx={{ mb: 4, color: '#2E7D32' }}
-                        >
-                            Automated Lead Scoring
-                        </Typography>
-                        <Typography variant="body1" sx={{ mb: 2 }}>
-                            Rank and prioritize leads based on AI-driven scoring models, ensuring you focus on the best opportunities.
-                        </Typography>
-
-                        <Typography
-                            variant="h4"
-                            fontWeight="bold"
-                            sx={{ mb: 4, color: '#2E7D32' }}
-                        >
-                            Lorem Ipsum
-                        </Typography>
-                        <Typography variant="body1" sx={{ mb: 2 }}>
-                            Placeholder text for any additional features or benefits you’d like to highlight.
-                        </Typography>
-
-                        <Typography
-                            variant="h4"
-                            fontWeight="bold"
-                            sx={{ mb: 4, color: '#2E7D32' }}
-                        >
-                            More Solutions
-                        </Typography>
-                        <Typography variant="body1">
-                            Easily integrate AI into existing CRM systems, scale solutions as you grow, and tailor everything to your unique needs.
-                        </Typography>
-                    </Grid>
-                </Grid>
-            </Container>
-
-            {/* Original "Footer" from your code replaced by the new separate Footer component */}
-            <Footer />
-        </Box>
-    );
+      {/* Footer */}
+      <Footer />
+    </Box>
+  );
 }
