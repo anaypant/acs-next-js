@@ -24,36 +24,53 @@ function LoadingContent() {
 
                 // Generate default domain
                 const defaultDomain = `${user.user_metadata.full_name.replace(' ', '_')}@homes.automatedconsultancy.com`;
-
-                // Send default domain to backend
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        jwt: token,
-                        email: user.email,
-                        uid: user.id,
-                        responseEmail: defaultDomain,
-                    }),
-                });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Error processing domain:', errorText);
-                    router.push('/signup'); // Redirect to signup if domain processing fails
-                    return;
-                }
+                // @TODO: Implement some process for existing users to get their ACS mail here.
 
                 // Redirect to the appropriate page
                 if (source === 'signup') {
+                    // Call AWS signup API
+                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/auth/create`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            jwt: token,
+                            email: user.email,
+                            uid: user.id,
+                            responseEmail: defaultDomain,
+                        }),
+                    });
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('Error processing domain:', errorText);
+                        router.push('/signup'); // Redirect to signup if domain processing fails
+                        return;
+                    }
                     router.push(`/welcome?domain=${defaultDomain}`); // Pass domain to welcome page
                 } else {
+                    // Call ACS Login API
+                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            jwt: token,
+                            email: user.email,
+                            uid: user.id,
+                            responseEmail: defaultDomain,
+                        }),
+                    });
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('Error processing domain:', errorText);
+                        router.push('/login'); // Redirect to signup if domain processing fails
+                        return;
+                    }
                     router.push('/dashboard'); // Skip welcome page for login
                 }
             } catch (err) {
                 console.error('Unexpected error:', err);
-                router.push('/signup'); // Redirect back to signup in case of errors
+                router.push('/error?error=loadingPage'); // Redirect back to signup in case of errors
             }
         };
 

@@ -22,7 +22,7 @@ export default function SignupPage() {
     const checkUser = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        router.push('/domain-selection'); // Redirect if already logged in
+        router.push('/'); // Redirect if already logged in
       }
     };
 

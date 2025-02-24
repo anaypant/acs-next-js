@@ -34,30 +34,7 @@ export default function LoginPage() {
         setMessage('Error: Please verify your email before logging in.');
         await supabase.auth.signOut();
       } else {
-        setMessage('Login successful!');
-
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/auth/login`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include', // Ensures cookies are saved
-          body: JSON.stringify({
-            jwt: data.session.access_token, // Supabase JWT token
-            email: formData.email,
-            uid: data.user.id, // Supabase user ID
-          }),
-        });
-  
-        if (response.ok) {
-          const responseData = await response.json();
-          setMessage('Session created successfully.');
-          router.push('/dashboard');
-        } else {
-          const errorData = await response.json();
-          setMessage(`Login failed: ${errorData.message}`);
-        }
-
+        router.push(`${window.location.origin}/loading`);
       }
     } catch (err) {
       console.error(err);
@@ -100,10 +77,12 @@ export default function LoginPage() {
     setMessage('');
 
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/loading`, // Ensure redirect happens correctly
+        },
       });
-      console.log("Back here")
 
       if (error) {
         setMessage(`Error: ${error.message}`);
