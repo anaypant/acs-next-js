@@ -90,7 +90,7 @@ export default function Navbar() {
                         </Link>
                     </li>
                     <li>
-                        <Link href="/contact" className="hover:text-[#8FA1D0]">
+                        <Link href="/contact-us" className="hover:text-[#8FA1D0]">
                             Contact
                         </Link>
                     </li>

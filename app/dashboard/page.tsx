@@ -6,18 +6,6 @@ import { fetchThreadsFromDynamoDB } from '../utils/aws/functions';
 import { supabase } from '../utils/supabase/supabase';
 import { FaHome, FaDraftingCompass, FaUserFriends, FaEnvelope, FaCreditCard, FaCog } from 'react-icons/fa';
 
-interface Email {
-    conversationId: string;
-    responseId: string;
-    associatedAccount: string;
-    body: string;
-    receiver: string;
-    s3Location: string;
-    sender: string;
-    subject: string;
-    timestamp: string;
-    type: string;
-}
 
 interface ThreadSummary {
     conversationId: string;
