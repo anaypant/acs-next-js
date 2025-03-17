@@ -1,10 +1,13 @@
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowUpRight, Plus } from "lucide-react"
+import Navbar from './components/Navbar';
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-white bg-[radial-gradient(circle,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[length:40px_40px] relative">
+      <Navbar />
+
       {/* Grid Background Behind Navbar and Hero */}
       <div
         className="absolute top-0 left-0 w-full bg-gray-50"
