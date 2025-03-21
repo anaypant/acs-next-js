@@ -1,162 +1,187 @@
-'use client';
+"use client"
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '../utils/supabase/supabase';
-import { motion } from 'framer-motion';
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { supabase } from "../utils/supabase/supabase"
+import { motion } from "framer-motion"
+import Image from "next/image"
 
 export default function LoginPage() {
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [message, setMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isResettingPassword, setIsResettingPassword] = useState(false);
-  const router = useRouter();
+  const [formData, setFormData] = useState({ email: "", password: "" })
+  const [message, setMessage] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [isResettingPassword, setIsResettingPassword] = useState(false)
+  const router = useRouter()
 
   // Handle input changes
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
 
   // Handle login form submission
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setMessage('');
+    e.preventDefault()
+    setIsLoading(true)
+    setMessage("")
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
-      });
+      })
 
       if (error) {
-        setMessage(`Error: ${error.message}`);
+        setMessage(`Error: ${error.message}`)
       } else if (data.user && !data.user.email_confirmed_at) {
-        setMessage('Error: Please verify your email before logging in.');
-        await supabase.auth.signOut();
+        setMessage("Error: Please verify your email before logging in.")
+        await supabase.auth.signOut()
       } else {
-        setMessage('Login successful!');
+        setMessage("Login successful!")
 
         // Create session on your server
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/auth/login`, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
-          credentials: 'include', // Ensures cookies are saved
+          credentials: "include", // Ensures cookies are saved
           body: JSON.stringify({
             jwt: data.session.access_token, // Supabase JWT token
             email: formData.email,
             uid: data.user.id, // Supabase user ID
           }),
-        });
+        })
 
         if (response.ok) {
-          const responseData = await response.json();
-          setMessage('Session created successfully.');
-          router.push('/dashboard');
+          const responseData = await response.json()
+          setMessage("Session created successfully.")
+          router.push("/dashboard")
         } else {
-          const errorData = await response.json();
-          setMessage(`Login failed: ${errorData.message}`);
+          const errorData = await response.json()
+          setMessage(`Login failed: ${errorData.message}`)
         }
       }
     } catch (err) {
-      console.error(err);
-      setMessage('An unexpected error occurred. Please try again.');
+      console.error(err)
+      setMessage("An unexpected error occurred. Please try again.")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   // Handle "Forgot Password"
   const handleForgotPassword = async () => {
-    setIsResettingPassword(true);
-    setMessage('');
+    setIsResettingPassword(true)
+    setMessage("")
 
     if (!formData.email) {
-      setMessage('Please enter your email address to reset your password.');
-      setIsResettingPassword(false);
-      return;
+      setMessage("Please enter your email address to reset your password.")
+      setIsResettingPassword(false)
+      return
     }
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
         redirectTo: `${window.location.origin}/reset-password`,
-      });
+      })
 
       if (error) {
-        setMessage(`Error: ${error.message}`);
+        setMessage(`Error: ${error.message}`)
       } else {
-        setMessage('Password reset email sent! Check your inbox.');
+        setMessage("Password reset email sent! Check your inbox.")
       }
     } catch (err) {
-      console.error(err);
-      setMessage('An unexpected error occurred. Please try again.');
+      console.error(err)
+      setMessage("An unexpected error occurred. Please try again.")
     } finally {
-      setIsResettingPassword(false);
+      setIsResettingPassword(false)
     }
-  };
+  }
 
   // Handle sign in with Google
   const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    setMessage('');
+    setIsLoading(true)
+    setMessage("")
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
           redirectTo: `${window.location.origin}/loading?source=login`,
         },
-      });
+      })
 
       if (error) {
-        setMessage(`Error: ${error.message}`);
+        setMessage(`Error: ${error.message}`)
       } else {
-        setMessage('Redirecting to Google...');
+        setMessage("Redirecting to Google...")
       }
     } catch (err) {
-      console.error('Error during Google sign-in:', err);
-      setMessage('An unexpected error occurred. Please try again.');
+      console.error("Error during Google sign-in:", err)
+      setMessage("An unexpected error occurred. Please try again.")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
+
+  // Handle sign in with Apple
+  const handleAppleSignIn = async () => {
+    setIsLoading(true)
+    setMessage("")
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "apple",
+        options: {
+          redirectTo: `${window.location.origin}/loading?source=login`,
+        },
+      })
+
+      if (error) {
+        setMessage(`Error: ${error.message}`)
+      } else {
+        setMessage("Redirecting to Apple...")
+      }
+    } catch (err) {
+      console.error("Error during Apple sign-in:", err)
+      setMessage("An unexpected error occurred. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
-    <div
-      // Solid dark green background by default
-      className="min-h-screen w-full flex items-center justify-center p-4 relative bg-[#0D331A]"
-    >
-      {/* Optional overlay (if you want a slight darkening effect, you can comment out if not needed) */}
-      <div className="absolute inset-0 bg-black opacity-40" />
+    <div className="min-h-screen w-full flex items-center justify-center relative">
+      {/* Background Image */}
+      <Image src="/greenblur.png" alt="Background" fill priority className="object-cover z-0" quality={100} />
 
-      {/* Main container (above overlay) */}
-      <motion.div
-        className="relative z-10 w-full max-w-md flex flex-col items-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
+      {/* Content */}
+      <div className="w-full max-w-md px-6 py-12 flex flex-col items-center z-10 relative">
         {/* Heading */}
         <motion.h1
-          className="text-4xl font-extrabold text-white mb-2"
-          initial={{ opacity: 0, y: -30 }}
+          className="text-5xl font-bold text-white mb-2 text-center"
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.5 }}
         >
           Welcome Back!
         </motion.h1>
-        <p className="text-white text-sm mb-6">
+
+        <motion.p
+          className="text-white text-base mb-8 text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
           Enter your Credentials to access your account
-        </p>
+        </motion.p>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="w-full space-y-4">
+        <form onSubmit={handleSubmit} className="w-full space-y-6">
           {/* Email Field */}
           <div className="flex flex-col">
-            <label htmlFor="email" className="text-white text-sm mb-1">
+            <label htmlFor="email" className="text-white text-base mb-2">
               Email
             </label>
             <input
@@ -167,14 +192,13 @@ export default function LoginPage() {
               value={formData.email}
               onChange={handleChange}
               required
-              aria-label="Email Address"
-              className="w-full p-3 rounded-md border border-[#2B7A3F] bg-transparent text-white placeholder-gray-200 focus:outline-none focus:ring-2 focus:ring-[#2B7A3F]"
+              className="w-full p-4 rounded-md border border-[#2B7A3F] bg-transparent text-white placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-[#2B7A3F]"
             />
           </div>
 
           {/* Password Field */}
           <div className="flex flex-col">
-            <label htmlFor="password" className="text-white text-sm mb-1">
+            <label htmlFor="password" className="text-white text-base mb-2">
               Password
             </label>
             <input
@@ -185,92 +209,104 @@ export default function LoginPage() {
               value={formData.password}
               onChange={handleChange}
               required
-              aria-label="Password"
-              className="w-full p-3 rounded-md border border-[#2B7A3F] bg-transparent text-white placeholder-gray-200 focus:outline-none focus:ring-2 focus:ring-[#2B7A3F]"
+              className="w-full p-4 rounded-md border border-[#2B7A3F] bg-transparent text-white placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-[#2B7A3F]"
             />
           </div>
 
-          {/* Submit Button (labeled SIGN UP to match screenshot) */}
+          {/* Sign Up Button */}
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full py-3 mt-2 font-bold rounded-md 
-              ${
-                isLoading
-                  ? 'bg-[#8FA1D0] text-white cursor-not-allowed'
-                  : 'bg-white text-[#2B7A3F] hover:bg-[#f0f0f0]'
-              }
-            `}
+            className={`w-full py-4 text-lg font-bold rounded-md transition-colors
+              ${isLoading ? "bg-opacity-70 cursor-not-allowed" : ""} bg-[#F0F9F0] text-[#0D331A] hover:bg-white`}
           >
-            {isLoading ? 'Logging in...' : 'SIGN UP'}
+            {isLoading ? "Logging in..." : "SIGN UP"}
           </button>
         </form>
 
-        {/* Forgot Password (functionality preserved) */}
-        <p
+        {/* Forgot Password */}
+        <button
           onClick={handleForgotPassword}
-          className="mt-4 text-sm text-white hover:underline cursor-pointer"
+          disabled={isResettingPassword}
+          className="mt-4 text-white hover:underline focus:outline-none"
         >
-          {isResettingPassword ? 'Sending reset email...' : 'Forgot Password?'}
-        </p>
+          {isResettingPassword ? "Sending reset email..." : "Forgot Password?"}
+        </button>
 
-        {/* Divider OR */}
-        <div className="my-6 flex items-center w-full">
-          <hr className="flex-grow border-t border-gray-400" />
-          <span className="mx-2 text-white text-sm">OR</span>
-          <hr className="flex-grow border-t border-gray-400" />
+        {/* Divider */}
+        <div className="w-full flex items-center my-8">
+          <div className="flex-grow h-px bg-[#2B7A3F]"></div>
+          <span className="px-4 text-white">Or</span>
+          <div className="flex-grow h-px bg-[#2B7A3F]"></div>
         </div>
 
-        {/* Sign in with Google */}
-        <button
-          onClick={handleGoogleSignIn}
-          disabled={isLoading}
-          className={`w-full flex items-center justify-center py-3 px-4 mb-2 rounded-md text-sm font-medium border border-[#2B7A3F] 
-            ${isLoading ? 'bg-gray-200 cursor-not-allowed' : 'bg-white hover:bg-[#f0f0f0]'}
-          `}
-        >
-          <img src="/google-icon.svg" alt="Google" className="w-5 h-5 mr-2" />
-          {isLoading ? 'Redirecting...' : 'Sign in with Google'}
-        </button>
-
-        {/* Sign in with Apple */}
-        <button
-          disabled={isLoading}
-          className={`w-full flex items-center justify-center py-3 px-4 rounded-md text-sm font-medium border border-[#2B7A3F] bg-white
-            ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#f0f0f0]'}
-          `}
-        >
-          <svg
-            className="w-5 h-5 mr-2"
-            viewBox="0 0 384 512"
-            fill="currentColor"
-            xmlns="http://www.w3.org/2000/svg"
+        {/* Social Sign In Buttons */}
+        <div className="w-full space-y-4">
+          {/* Google Sign In */}
+          <button
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-md bg-white text-black border border-[#2B7A3F] hover:bg-gray-100 transition-colors"
           >
-            <path d="M318.7 268.7c-.3-37 16.2-64.7 50.6-85.4-19.1-27.9-48.9-44.2-87.4-49.5-36.7-5.1-78.7 22-94.5 22-15.7 0-51.3-21.3-79.7-21.3-59.1.9-122.4 36.3-122.4 109.4 0 34.8 13.1 71.6 29.3 99.6 25.8 44.9 52.5 84.8 90.5 83.4 21.9-.9 31.1-14.2 58.2-14.2 26.8 0 35.2 14.2 58.1 13.8 38.1-.6 62.3-42.8 85-87.2 5.3-10.1 9.6-20.7 13-31.5-34.2-13-49.6-39.4-49.9-74.1zm-48.9-133.7c26.6-31.9 22.4-61.5 21.7-71.5-21 1.2-45.2 14.2-59.8 31.6-15.8 18.5-25.2 41.7-23.1 66.2 22.2 1.7 43.7-9.4 61.2-26.3z" />
-          </svg>
-          Sign in with Apple
-        </button>
+            <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+              <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
+                <path
+                  fill="#4285F4"
+                  d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L -10.684 57.329 C -11.764 58.049 -13.134 58.489 -14.754 58.489 C -17.884 58.489 -20.534 56.379 -21.484 53.529 L -25.464 53.529 L -25.464 56.619 C -23.494 60.539 -19.444 63.239 -14.754 63.239 Z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M -21.484 53.529 C -21.734 52.809 -21.864 52.039 -21.864 51.239 C -21.864 50.439 -21.724 49.669 -21.484 48.949 L -21.484 45.859 L -25.464 45.859 C -26.284 47.479 -26.754 49.299 -26.754 51.239 C -26.754 53.179 -26.284 54.999 -25.464 56.619 L -21.484 53.529 Z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M -14.754 43.989 C -12.984 43.989 -11.404 44.599 -10.154 45.789 L -6.734 42.369 C -8.804 40.429 -11.514 39.239 -14.754 39.239 C -19.444 39.239 -23.494 41.939 -25.464 45.859 L -21.484 48.949 C -20.534 46.099 -17.884 43.989 -14.754 43.989 Z"
+                />
+              </g>
+            </svg>
+            Sign in with Google
+          </button>
 
-        {/* Have an account? Sign In */}
-        <p className="mt-6 text-sm text-white">
-          Have an account?{' '}
-          <a href="#" className="text-[#8FA1D0] hover:underline">
-            Sign In
-          </a>
-        </p>
+          {/* Apple Sign In */}
+          <button
+            onClick={handleAppleSignIn}
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-md bg-white text-black border border-[#2B7A3F] hover:bg-gray-100 transition-colors"
+          >
+            <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701z" />
+            </svg>
+            Sign in with Apple
+          </button>
+        </div>
+
+        {/* Sign In Link */}
+        <div className="mt-8 text-center">
+          <p className="text-white">
+            Have an account?{" "}
+            <a href="/signin" className="text-[#4ADE80] hover:underline">
+              Sign In
+            </a>
+          </p>
+        </div>
 
         {/* Display any success/error messages */}
         {message && (
-          <motion.p
-            className="mt-4 text-center text-sm text-white"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+          <motion.div
+            className="mt-6 p-3 w-full text-center text-white bg-opacity-20 bg-white rounded-md"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
             {message}
-          </motion.p>
+          </motion.div>
         )}
-      </motion.div>
+      </div>
     </div>
-  );
+  )
 }
+
