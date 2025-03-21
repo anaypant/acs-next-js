@@ -4,7 +4,7 @@ import React, { FC, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from "@headlessui/react";
 import { Card, CardContent } from "../components/ui/Card";
-import LeftNavBar from "../components/LeftNavBar";
+import Sidebar from '../components/LeftNavbar';
 import {
   Home,
   Search,
@@ -91,7 +91,7 @@ export default function Dashboard() {
       className={`flex h-screen w-screen overflow-hidden ${COLORS.background}`}
     >
       {/* SIDEBAR */}
-      <LeftNavBar />
+      <Sidebar />
 
       {/* MAIN CONTENT */}
       <div className="p-8 flex-1 overflow-y-auto">
