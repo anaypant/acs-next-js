@@ -19,6 +19,7 @@
     "@mui/material": "^6.4.1",
     "@supabase/ssr": "github:supabase/ssr",
     "@supabase/supabase-js": "^2.47.14",
+    "bufferutil": "^4.0.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^16.4.7",
@@ -40,7 +41,8 @@
     "supabase": "^2.6.8",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
-    "ts-morph": "^25.0.0"
+    "ts-morph": "^25.0.0",
+    "utf-8-validate": "^6.0.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

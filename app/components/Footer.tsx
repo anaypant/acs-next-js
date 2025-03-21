@@ -1,36 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { supabase } from '../utils/supabase/supabase';
-
-type CustomUser = {
-  id: string;
-  email: string;
-  name?: string;
-};
-
 export default function Footer() {
-  const [user, setUser] = useState<CustomUser | null>(null);
-  const router = useRouter();
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      setUser(session?.user as CustomUser | null);
-    };
-
-    fetchUser();
-  }, []);
-
-  // Optional sign-out logic if you want to allow sign-out from the footer
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    router.push('/');
-  };
 
   return (
     <footer className="bg-green-900 text-gray-100">

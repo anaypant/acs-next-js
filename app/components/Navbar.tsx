@@ -5,23 +5,22 @@ import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../utils/supabase/supabase';
 import { FaUserCircle } from 'react-icons/fa';
 import { Menu, X } from 'lucide-react';
+import { User } from '@supabase/supabase-js';
+
 
 export default function Navbar() {
   // State management
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isLoading, setLoading] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Fetch user session on mount and subscribe to auth state changes
   useEffect(() => {
     const fetchUser = async () => {
       try {
         setLoading(true);
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user ?? null);
       } catch (error) {
         console.error('Error fetching user:', error);
