@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { FC, useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Button } from "@headlessui/react";
+import RootLayout from '../layout'
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Card, CardContent } from "../components/ui/Card";
-import LeftNavBar from "../components/LeftNavBar";
+import { Button } from "@headlessui/react";
 import {
   Home,
   Search,
@@ -18,10 +18,6 @@ import {
   Bell,
   User,
 } from "lucide-react";
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import './../styles.css'; // Adjust the path as necessary
-import NorthEastIcon from '@mui/icons-material/NorthEast';
-import FeaturesBody from './../page-body';
 import dynamic from "next/dynamic";
 import CountUp from "react-countup";
 
@@ -38,7 +34,7 @@ const ApexPieChart = dynamic(() => import("../components/charts/ApexPieChart"), 
 
 // Color constants
 const COLORS = {
-  background: "bg-[#fafffe]",
+  background: "bg-[#DFF6E9]",
   sidebar: "bg-[#043927]",
   sidebarItem: "bg-[#0E4A3A]",
   button: "bg-[#0B6E4F] hover:bg-[#128054]",
@@ -91,7 +87,68 @@ export default function Dashboard() {
       className={`flex h-screen w-screen overflow-hidden ${COLORS.background}`}
     >
       {/* SIDEBAR */}
-      <LeftNavBar />
+      <aside
+        className={`w-72 ${COLORS.sidebar} text-white p-6 flex flex-col justify-between`}
+      >
+        {/* Top Section */}
+        <div className="flex flex-col gap-6">
+          {/* Brand / Dashboard Title */}
+          <h2 className="text-2xl font-bold">ACS</h2>
+          <span className="text-sm text-gray-200">
+            Empowering Realtors with AI
+          </span>
+
+          {/* Search Bar */}
+          <div className="relative mt-4">
+            <input
+              type="text"
+              placeholder="Search"
+              className="w-full p-2 pl-10 rounded-md bg-[#0E4A3A] text-white focus:outline-none"
+            />
+            <Search className="absolute left-3 top-3 text-white" size={18} />
+          </div>
+
+          {/* Nav Items */}
+          <nav className="flex flex-col gap-3 mt-4">
+            <Button
+              className={`flex items-center gap-3 p-3 rounded-lg ${COLORS.widgetBackground} text-white hover:opacity-90`}
+            >
+              <Home size={18} />
+              Dashboards
+            </Button>
+            <Button
+              className={`flex items-center gap-3 p-3 rounded-lg ${COLORS.widgetBackground} text-white hover:opacity-90`}
+            >
+              <Activity size={18} />
+              Case Studies
+            </Button>
+            <Button
+              className={`flex items-center gap-3 p-3 rounded-lg ${COLORS.widgetBackground} text-white hover:opacity-90`}
+            >
+              <Layers size={18} />
+              Filters
+            </Button>
+            <Button
+              className={`flex items-center gap-3 p-3 rounded-lg ${COLORS.widgetBackground} text-white hover:opacity-90`}
+            >
+              <FileText size={18} />
+              Quick Actions
+            </Button>
+            <Button
+              className={`flex items-center gap-3 p-3 rounded-lg ${COLORS.widgetBackground} text-white hover:opacity-90`}
+            >
+              <Settings size={18} />
+              Settings
+            </Button>
+          </nav>
+        </div>
+
+        {/* Bottom / Profile */}
+        <div className="mt-8 flex items-center gap-3">
+          <User size={24} />
+          <span className="font-semibold">Mr. Avinash</span>
+        </div>
+      </aside>
 
       {/* MAIN CONTENT */}
       <div className="p-8 flex-1 overflow-y-auto">
