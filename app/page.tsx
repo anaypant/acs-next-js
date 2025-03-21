@@ -1,6 +1,7 @@
 'use client';
 
 import React, { FC, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   AppBar,
@@ -21,10 +22,13 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import './styles.css'; // Adjust the path as necessary
 import NorthEastIcon from '@mui/icons-material/NorthEast';
 import FeaturesBody from './page-body';
+
 // ----------------------------------------------------------------
 //  NAVBAR (simplified inline, but feel free to use your own Navbar)
 // ----------------------------------------------------------------
+
 const NavBar: FC = () => {
+  const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -57,6 +61,11 @@ const NavBar: FC = () => {
             opacity: '0',
             cursor: 'default'
           }}
+          onClick={() => {
+            // route to /login
+            router.push('/login');
+          }}
+          
         >
           Login
         </Button><Button
@@ -69,7 +78,7 @@ const NavBar: FC = () => {
             cursor: 'default'
           }}
         >
-          Login
+          Sign Up
         </Button>
 
     {/* Center: Nav Items */}
@@ -116,6 +125,10 @@ const NavBar: FC = () => {
               borderColor: '#0E6537',
             },
           }}
+          onClick={() => {
+            // route to /login
+            router.push('/login');
+          }}
         >
           Login
         </Button>
@@ -128,6 +141,10 @@ const NavBar: FC = () => {
             '&:hover': {
               backgroundColor: '#1B5E20',
             },
+          }}
+          onClick={() => {
+            // route to /login
+            router.push('/signup');
           }}
         >
           Sign Up
