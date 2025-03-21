@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import {QueryCommand, PutItemCommand } from '@aws-sdk/client-dynamodb';
-import dynamoDBClient from "@/app/utils/aws/dynamodb";
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { useCallback } from 'react';
@@ -17,7 +16,8 @@ interface Message {
     body: string;
 }
 
-export default function ConversationPage() {
+export default function ConversationPage() { 
+    console.log("Here");
     const params = useParams();
     const threadId = params.threadId ? params.threadId[0] : '';
     const [isMounted, setIsMounted] = useState(false); // Ensure hydration consistency
@@ -106,7 +106,6 @@ export default function ConversationPage() {
     const handleSendResponse = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const client = dynamoDBClient();
         let newMessageId = 1;
         const timestamp = new Date().toISOString();
 
@@ -123,20 +122,7 @@ export default function ConversationPage() {
                 },
             };
 
-            const queryCommand = new QueryCommand(queryParams);
-            const queryResponse = await client.send(queryCommand);
-
-            const items = queryResponse.Items || [];
-            const messageIds = items.map((item) => {
-                const compositeKey = item["ThreadID#MessageID"]?.S || "";
-                const [_, messageId] = compositeKey.split("#");
-                console.log(_);
-                return parseInt(messageId, 10);
-            });
-
-            if (messageIds.length > 0) {
-                newMessageId = Math.max(...messageIds) + 1;
-            }
+            
 
             const newCompositeKey = `${threadId[0]}#${String(newMessageId).padStart(3, "0")}`;
 
@@ -153,8 +139,6 @@ export default function ConversationPage() {
                 },
             };
 
-            const putCommand = new PutItemCommand(putParams);
-            await client.send(putCommand);
             alert("Response sent successfully!");
 
             setResponse({
